@@ -1,0 +1,63 @@
+package handlers
+
+import (
+	"context"
+	"net/http"
+	"encoding/json"
+	
+	"NewPhotoWeb/logic/proto"
+	signinmodel "NewPhotoWeb/logic/services/models/auth/sign_in"
+	
+	. "NewPhotoWeb/config"
+)
+
+type ISignInPage interface {
+	PostHandler() http.Handler
+}
+
+type signin struct{}
+
+func (a *signin) PostHandler() http.Handler {
+	//Post handler for account page ...
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		var req signinmodel.GETRequestSignInModel
+		json.NewDecoder(r.Body).Decode(&req)
+
+		grpcResp, err := AC.LoginUser(
+			context.Background(), 
+			&proto.UserLoginRequest{
+				Login: req.Data.Login, 
+				Password: req.Data.Password,
+			})
+		if err != nil {
+			Logger.ClientError()
+		}
+
+		resp := new(signinmodel.GETResponseSignInModel)
+
+		if grpcResp.Error == "OK" {
+			session, err := Storage.Get(r, "sessionid")
+			if err != nil {
+				Logger.Warnln(err.Error())
+			}
+			session.Values["userid"] = grpcResp.GetUserid()
+			session.Values["loggedin"] = "true"
+			err = session.Save(r, w)
+			if err != nil {
+				Logger.Warnln(err.Error())
+			}
+
+			resp.Service.Ok = true
+		}
+		if err := json.NewEncoder(w).Encode(resp); err != nil{
+			Logger.Fatalln(err)
+		}
+	})
+
+}
+
+func NewSignInPageHandler() ISignInPage {
+	return new(signin)
+}
