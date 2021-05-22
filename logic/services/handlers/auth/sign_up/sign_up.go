@@ -22,16 +22,18 @@ func (a *signup) PostHandler() http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req signupmodel.POSTRequestRegestrationModel
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			Logger.Fatalln(err)
+		}
 
 		resp := new(signupmodel.POSTResponseRegestrationModel)
 
 		grpcResp, err := AC.RegisterUser(
-			context.Background(), 
+			context.Background(),
 			&proto.UserRegisterRequest{
-				Login: req.Data.Login, 
-				Password: req.Data.Password1, 
-				Firstname: req.Data.Firstname, 
+				Login:      req.Data.Login,
+				Password:   req.Data.Password1,
+				Firstname:  req.Data.Firstname,
 				Secondname: req.Data.Secondname,
 			})
 		if err != nil {
@@ -40,7 +42,7 @@ func (a *signup) PostHandler() http.Handler {
 
 		resp.Service.Ok = grpcResp.GetOk()
 
-		if err := json.NewEncoder(w).Encode(resp); err != nil{
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			Logger.Fatalln(err)
 		}
 	})

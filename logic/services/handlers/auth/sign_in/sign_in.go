@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"context"
-	"net/http"
 	"encoding/json"
-	
+	"net/http"
+
 	"NewPhotoWeb/logic/proto"
 	signinmodel "NewPhotoWeb/logic/services/models/auth/sign_in"
-	
+
 	. "NewPhotoWeb/config"
 )
 
@@ -23,12 +23,14 @@ func (a *signin) PostHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		var req signinmodel.GETRequestSignInModel
-		json.NewDecoder(r.Body).Decode(&req)
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			Logger.Fatalln(err)
+		}
 
 		grpcResp, err := AC.LoginUser(
-			context.Background(), 
+			context.Background(),
 			&proto.UserLoginRequest{
-				Login: req.Data.Login, 
+				Login:    req.Data.Login,
 				Password: req.Data.Password,
 			})
 		if err != nil {
@@ -37,7 +39,7 @@ func (a *signin) PostHandler() http.Handler {
 
 		resp := new(signinmodel.GETResponseSignInModel)
 
-		if grpcResp.Error == "OK" {
+		if grpcResp.GetOk() {
 			session, err := Storage.Get(r, "sessionid")
 			if err != nil {
 				Logger.Warnln(err.Error())
@@ -51,7 +53,7 @@ func (a *signin) PostHandler() http.Handler {
 
 			resp.Service.Ok = true
 		}
-		if err := json.NewEncoder(w).Encode(resp); err != nil{
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			Logger.Fatalln(err)
 		}
 	})

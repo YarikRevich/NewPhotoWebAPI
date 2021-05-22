@@ -36,7 +36,7 @@ func (a *album) GetHandler() http.Handler {
 			Logger.Warnln(err.Error())
 		}
 
-		grpcResp, err := NPC.GetAllAlbums(context.Background(), &proto.GetAllAlbumsRequest{Userid: session.Values["userid"].(string)})
+		grpcResp, err := NPC.GetAlbums(context.Background(), &proto.GetAlbumsRequest{Userid: session.Values["userid"].(string)})
 		if err != nil {
 			Logger.ClientError()
 		}
@@ -51,11 +51,11 @@ func (a *album) GetHandler() http.Handler {
 			resp.Result = append(resp.Result, struct {
 				Name                 string `json:"name"`
 				LatestPhoto          string `json:"latestphoto"`
-				LatestPhotoThumbnail string "json:\"latestphotothumbnail\""
+				LatestPhotoThumbnail string `json:"latestphotothumbnail"`
 			}{
 				Name:                 grpcStreamResp.GetName(),
-				LatestPhoto:          base64.StdEncoding.EncodeToString(grpcStreamResp.GetLatestPhoto()),
-				LatestPhotoThumbnail: base64.StdEncoding.EncodeToString(grpcStreamResp.GetLatestPhotoThumbnail()),
+				LatestPhoto:          string(grpcStreamResp.GetLatestPhoto()),
+				LatestPhotoThumbnail: string(grpcStreamResp.GetLatestPhotoThumbnail()),
 			})
 		}
 
@@ -85,10 +85,11 @@ func (a *album) PostHandler() http.Handler {
 		if err != nil {
 			Logger.Fatalln(err)
 		}
-		if grpcResp.GetError() != "OK" {
+		if grpcResp.GetOk() {
 			resp.Service.Message = fmt.Sprintf("Something went wrong creating %s album", req.Data.Name)
 		}
 
+		resp.Service.Ok = true
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			Logger.Fatalln(err)
 		}
@@ -117,7 +118,7 @@ func (a *album) DeleteHandler() http.Handler {
 			Logger.Fatalln(err.Error())
 		}
 
-		if grpcResp.GetError() != "OK" {
+		if grpcResp.GetOk() {
 			resp.Service.Message = fmt.Sprintf("Something went wrong deleting %s album", req.Data.Name)
 		}
 
@@ -131,8 +132,8 @@ func (a *album) PutHandler() http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		var req albummodel.PUPRequestAlbumModel
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil{
+		var req albummodel.PUTRequestAlbumModel
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			Logger.Fatalln(err)
 		}
 
@@ -146,7 +147,7 @@ func (a *album) PutHandler() http.Handler {
 			Logger.Fatalln(err)
 		}
 
-		resp := new(albummodel.PUPResponseAlbumModel)
+		resp := new(albummodel.PUTResponseAlbumModel)
 
 		for _, value := range req.Result.Data {
 			efile, err := base64.StdEncoding.DecodeString(value.File)
@@ -178,7 +179,7 @@ func (a *album) PutHandler() http.Handler {
 				Logger.Fatalln(err)
 			}
 
-			if err := grpcResp.Send(&proto.UploadPhotoToAlbumRequest{Userid: session.Values["userid"].(string), Photo: efile, Thumbnail: thumbnail.Bytes(), Extension: value.Extension, Size: value.Size, Album: req.Result.Name}); err != nil{
+			if err := grpcResp.Send(&proto.UploadPhotoToAlbumRequest{Userid: session.Values["userid"].(string), Photo: efile, Thumbnail: thumbnail.Bytes(), Extension: value.Extension, Size: value.Size, Album: req.Result.Name}); err != nil {
 				Logger.Fatalln(err)
 			}
 		}
@@ -188,7 +189,7 @@ func (a *album) PutHandler() http.Handler {
 		}
 		resp.Service.Ok = true
 
-		if err := json.NewEncoder(w).Encode(resp); err != nil{
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			Logger.Fatalln(err)
 		}
 	})

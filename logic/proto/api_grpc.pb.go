@@ -140,18 +140,24 @@ var Authentication_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type NewPhotosClient interface {
-	// Returns all the photos of the passed user ...
-	AllPhotos(ctx context.Context, in *AllPhotosRequest, opts ...grpc.CallOption) (NewPhotos_AllPhotosClient, error)
-	// Uploads equal photo of the passed user ...
-	UploadEqualPhoto(ctx context.Context, in *UploadEqualPhotoRequest, opts ...grpc.CallOption) (*UploadEqualPhotoResponse, error)
-	// Returns current available storage for storing of the passed user ...
+	GetPhotos(ctx context.Context, in *GetPhotosRequest, opts ...grpc.CallOption) (NewPhotos_GetPhotosClient, error)
+	GetVideos(ctx context.Context, in *GetVideosRequest, opts ...grpc.CallOption) (NewPhotos_GetVideosClient, error)
+	UploadPhoto(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_UploadPhotoClient, error)
+	UploadVideo(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_UploadVideoClient, error)
 	GetUserinfo(ctx context.Context, in *GetUserinfoRequest, opts ...grpc.CallOption) (*GetUserinfoResponse, error)
-	GetFullPhotoByThumbnail(ctx context.Context, in *GetFullPhotoByThumbnailRequest, opts ...grpc.CallOption) (*GetFullPhotoByThumbnailResponse, error)
-	AllPhotosAlbum(ctx context.Context, in *AllPhotosAlbumRequest, opts ...grpc.CallOption) (NewPhotos_AllPhotosAlbumClient, error)
-	GetAllAlbums(ctx context.Context, in *GetAllAlbumsRequest, opts ...grpc.CallOption) (NewPhotos_GetAllAlbumsClient, error)
+	GetUserAvatar(ctx context.Context, in *GetUserAvatarRequest, opts ...grpc.CallOption) (*GetUserAvatarResponse, error)
+	SetUserAvatar(ctx context.Context, in *SetUserAvatarRequest, opts ...grpc.CallOption) (*SetUserAvatarResponse, error)
+	GetPhotosFromAlbum(ctx context.Context, in *GetPhotosFromAlbumRequest, opts ...grpc.CallOption) (NewPhotos_GetPhotosFromAlbumClient, error)
+	GetVideosFromAlbum(ctx context.Context, in *GetVideosFromAlbumRequest, opts ...grpc.CallOption) (NewPhotos_GetVideosFromAlbumClient, error)
+	GetAlbums(ctx context.Context, in *GetAlbumsRequest, opts ...grpc.CallOption) (NewPhotos_GetAlbumsClient, error)
 	CreateAlbum(ctx context.Context, in *CreateAlbumRequest, opts ...grpc.CallOption) (*CreateAlbumResponse, error)
 	DeleteAlbum(ctx context.Context, in *DeleteAlbumRequest, opts ...grpc.CallOption) (*DeleteAlbumResponse, error)
 	UploadPhotoToAlbum(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_UploadPhotoToAlbumClient, error)
+	UploadVideoToAlbum(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_UploadVideoToAlbumClient, error)
+	DeletePhotoFromAlbum(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_DeletePhotoFromAlbumClient, error)
+	DeleteVideoFromAlbum(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_DeleteVideoFromAlbumClient, error)
+	GetAlbumInfo(ctx context.Context, in *GetAlbumInfoRequest, opts ...grpc.CallOption) (*GetAlbumInfoResponse, error)
+	GetFullPhotoByThumbnail(ctx context.Context, in *GetFullPhotoByThumbnailRequest, opts ...grpc.CallOption) (*GetFullPhotoByThumbnailResponse, error)
 }
 
 type newPhotosClient struct {
@@ -162,12 +168,12 @@ func NewNewPhotosClient(cc grpc.ClientConnInterface) NewPhotosClient {
 	return &newPhotosClient{cc}
 }
 
-func (c *newPhotosClient) AllPhotos(ctx context.Context, in *AllPhotosRequest, opts ...grpc.CallOption) (NewPhotos_AllPhotosClient, error) {
-	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[0], "/main.NewPhotos/AllPhotos", opts...)
+func (c *newPhotosClient) GetPhotos(ctx context.Context, in *GetPhotosRequest, opts ...grpc.CallOption) (NewPhotos_GetPhotosClient, error) {
+	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[0], "/main.NewPhotos/GetPhotos", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &newPhotosAllPhotosClient{stream}
+	x := &newPhotosGetPhotosClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -177,30 +183,121 @@ func (c *newPhotosClient) AllPhotos(ctx context.Context, in *AllPhotosRequest, o
 	return x, nil
 }
 
-type NewPhotos_AllPhotosClient interface {
-	Recv() (*AllPhotosResponse, error)
+type NewPhotos_GetPhotosClient interface {
+	Recv() (*GetPhotosResponse, error)
 	grpc.ClientStream
 }
 
-type newPhotosAllPhotosClient struct {
+type newPhotosGetPhotosClient struct {
 	grpc.ClientStream
 }
 
-func (x *newPhotosAllPhotosClient) Recv() (*AllPhotosResponse, error) {
-	m := new(AllPhotosResponse)
+func (x *newPhotosGetPhotosClient) Recv() (*GetPhotosResponse, error) {
+	m := new(GetPhotosResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *newPhotosClient) UploadEqualPhoto(ctx context.Context, in *UploadEqualPhotoRequest, opts ...grpc.CallOption) (*UploadEqualPhotoResponse, error) {
-	out := new(UploadEqualPhotoResponse)
-	err := c.cc.Invoke(ctx, "/main.NewPhotos/UploadEqualPhoto", in, out, opts...)
+func (c *newPhotosClient) GetVideos(ctx context.Context, in *GetVideosRequest, opts ...grpc.CallOption) (NewPhotos_GetVideosClient, error) {
+	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[1], "/main.NewPhotos/GetVideos", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &newPhotosGetVideosClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type NewPhotos_GetVideosClient interface {
+	Recv() (*GetVideosResponse, error)
+	grpc.ClientStream
+}
+
+type newPhotosGetVideosClient struct {
+	grpc.ClientStream
+}
+
+func (x *newPhotosGetVideosClient) Recv() (*GetVideosResponse, error) {
+	m := new(GetVideosResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *newPhotosClient) UploadPhoto(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_UploadPhotoClient, error) {
+	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[2], "/main.NewPhotos/UploadPhoto", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &newPhotosUploadPhotoClient{stream}
+	return x, nil
+}
+
+type NewPhotos_UploadPhotoClient interface {
+	Send(*UploadPhotoRequest) error
+	CloseAndRecv() (*UploadPhotoResponse, error)
+	grpc.ClientStream
+}
+
+type newPhotosUploadPhotoClient struct {
+	grpc.ClientStream
+}
+
+func (x *newPhotosUploadPhotoClient) Send(m *UploadPhotoRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *newPhotosUploadPhotoClient) CloseAndRecv() (*UploadPhotoResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(UploadPhotoResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *newPhotosClient) UploadVideo(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_UploadVideoClient, error) {
+	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[3], "/main.NewPhotos/UploadVideo", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &newPhotosUploadVideoClient{stream}
+	return x, nil
+}
+
+type NewPhotos_UploadVideoClient interface {
+	Send(*UploadVideoRequest) error
+	CloseAndRecv() (*UploadVideoResponse, error)
+	grpc.ClientStream
+}
+
+type newPhotosUploadVideoClient struct {
+	grpc.ClientStream
+}
+
+func (x *newPhotosUploadVideoClient) Send(m *UploadVideoRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *newPhotosUploadVideoClient) CloseAndRecv() (*UploadVideoResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(UploadVideoResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *newPhotosClient) GetUserinfo(ctx context.Context, in *GetUserinfoRequest, opts ...grpc.CallOption) (*GetUserinfoResponse, error) {
@@ -212,21 +309,30 @@ func (c *newPhotosClient) GetUserinfo(ctx context.Context, in *GetUserinfoReques
 	return out, nil
 }
 
-func (c *newPhotosClient) GetFullPhotoByThumbnail(ctx context.Context, in *GetFullPhotoByThumbnailRequest, opts ...grpc.CallOption) (*GetFullPhotoByThumbnailResponse, error) {
-	out := new(GetFullPhotoByThumbnailResponse)
-	err := c.cc.Invoke(ctx, "/main.NewPhotos/GetFullPhotoByThumbnail", in, out, opts...)
+func (c *newPhotosClient) GetUserAvatar(ctx context.Context, in *GetUserAvatarRequest, opts ...grpc.CallOption) (*GetUserAvatarResponse, error) {
+	out := new(GetUserAvatarResponse)
+	err := c.cc.Invoke(ctx, "/main.NewPhotos/GetUserAvatar", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *newPhotosClient) AllPhotosAlbum(ctx context.Context, in *AllPhotosAlbumRequest, opts ...grpc.CallOption) (NewPhotos_AllPhotosAlbumClient, error) {
-	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[1], "/main.NewPhotos/AllPhotosAlbum", opts...)
+func (c *newPhotosClient) SetUserAvatar(ctx context.Context, in *SetUserAvatarRequest, opts ...grpc.CallOption) (*SetUserAvatarResponse, error) {
+	out := new(SetUserAvatarResponse)
+	err := c.cc.Invoke(ctx, "/main.NewPhotos/SetUserAvatar", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &newPhotosAllPhotosAlbumClient{stream}
+	return out, nil
+}
+
+func (c *newPhotosClient) GetPhotosFromAlbum(ctx context.Context, in *GetPhotosFromAlbumRequest, opts ...grpc.CallOption) (NewPhotos_GetPhotosFromAlbumClient, error) {
+	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[4], "/main.NewPhotos/GetPhotosFromAlbum", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &newPhotosGetPhotosFromAlbumClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -236,29 +342,29 @@ func (c *newPhotosClient) AllPhotosAlbum(ctx context.Context, in *AllPhotosAlbum
 	return x, nil
 }
 
-type NewPhotos_AllPhotosAlbumClient interface {
-	Recv() (*AllPhotosAlbumResponse, error)
+type NewPhotos_GetPhotosFromAlbumClient interface {
+	Recv() (*GetPhotosFromAlbumResponse, error)
 	grpc.ClientStream
 }
 
-type newPhotosAllPhotosAlbumClient struct {
+type newPhotosGetPhotosFromAlbumClient struct {
 	grpc.ClientStream
 }
 
-func (x *newPhotosAllPhotosAlbumClient) Recv() (*AllPhotosAlbumResponse, error) {
-	m := new(AllPhotosAlbumResponse)
+func (x *newPhotosGetPhotosFromAlbumClient) Recv() (*GetPhotosFromAlbumResponse, error) {
+	m := new(GetPhotosFromAlbumResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *newPhotosClient) GetAllAlbums(ctx context.Context, in *GetAllAlbumsRequest, opts ...grpc.CallOption) (NewPhotos_GetAllAlbumsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[2], "/main.NewPhotos/GetAllAlbums", opts...)
+func (c *newPhotosClient) GetVideosFromAlbum(ctx context.Context, in *GetVideosFromAlbumRequest, opts ...grpc.CallOption) (NewPhotos_GetVideosFromAlbumClient, error) {
+	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[5], "/main.NewPhotos/GetVideosFromAlbum", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &newPhotosGetAllAlbumsClient{stream}
+	x := &newPhotosGetVideosFromAlbumClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -268,17 +374,49 @@ func (c *newPhotosClient) GetAllAlbums(ctx context.Context, in *GetAllAlbumsRequ
 	return x, nil
 }
 
-type NewPhotos_GetAllAlbumsClient interface {
-	Recv() (*GetAllAlbumsResponse, error)
+type NewPhotos_GetVideosFromAlbumClient interface {
+	Recv() (*GetVideosFromAlbumResponse, error)
 	grpc.ClientStream
 }
 
-type newPhotosGetAllAlbumsClient struct {
+type newPhotosGetVideosFromAlbumClient struct {
 	grpc.ClientStream
 }
 
-func (x *newPhotosGetAllAlbumsClient) Recv() (*GetAllAlbumsResponse, error) {
-	m := new(GetAllAlbumsResponse)
+func (x *newPhotosGetVideosFromAlbumClient) Recv() (*GetVideosFromAlbumResponse, error) {
+	m := new(GetVideosFromAlbumResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *newPhotosClient) GetAlbums(ctx context.Context, in *GetAlbumsRequest, opts ...grpc.CallOption) (NewPhotos_GetAlbumsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[6], "/main.NewPhotos/GetAlbums", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &newPhotosGetAlbumsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type NewPhotos_GetAlbumsClient interface {
+	Recv() (*GetAlbumsResponse, error)
+	grpc.ClientStream
+}
+
+type newPhotosGetAlbumsClient struct {
+	grpc.ClientStream
+}
+
+func (x *newPhotosGetAlbumsClient) Recv() (*GetAlbumsResponse, error) {
+	m := new(GetAlbumsResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -304,7 +442,7 @@ func (c *newPhotosClient) DeleteAlbum(ctx context.Context, in *DeleteAlbumReques
 }
 
 func (c *newPhotosClient) UploadPhotoToAlbum(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_UploadPhotoToAlbumClient, error) {
-	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[3], "/main.NewPhotos/UploadPhotoToAlbum", opts...)
+	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[7], "/main.NewPhotos/UploadPhotoToAlbum", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -337,22 +475,148 @@ func (x *newPhotosUploadPhotoToAlbumClient) CloseAndRecv() (*UploadPhotoToAlbumR
 	return m, nil
 }
 
+func (c *newPhotosClient) UploadVideoToAlbum(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_UploadVideoToAlbumClient, error) {
+	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[8], "/main.NewPhotos/UploadVideoToAlbum", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &newPhotosUploadVideoToAlbumClient{stream}
+	return x, nil
+}
+
+type NewPhotos_UploadVideoToAlbumClient interface {
+	Send(*UploadVideoToAlbumRequest) error
+	CloseAndRecv() (*UploadVideoToAlbumResponse, error)
+	grpc.ClientStream
+}
+
+type newPhotosUploadVideoToAlbumClient struct {
+	grpc.ClientStream
+}
+
+func (x *newPhotosUploadVideoToAlbumClient) Send(m *UploadVideoToAlbumRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *newPhotosUploadVideoToAlbumClient) CloseAndRecv() (*UploadVideoToAlbumResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(UploadVideoToAlbumResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *newPhotosClient) DeletePhotoFromAlbum(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_DeletePhotoFromAlbumClient, error) {
+	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[9], "/main.NewPhotos/DeletePhotoFromAlbum", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &newPhotosDeletePhotoFromAlbumClient{stream}
+	return x, nil
+}
+
+type NewPhotos_DeletePhotoFromAlbumClient interface {
+	Send(*DeletePhotoFromAlbumRequest) error
+	CloseAndRecv() (*DeletePhotoFromAlbumResponse, error)
+	grpc.ClientStream
+}
+
+type newPhotosDeletePhotoFromAlbumClient struct {
+	grpc.ClientStream
+}
+
+func (x *newPhotosDeletePhotoFromAlbumClient) Send(m *DeletePhotoFromAlbumRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *newPhotosDeletePhotoFromAlbumClient) CloseAndRecv() (*DeletePhotoFromAlbumResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(DeletePhotoFromAlbumResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *newPhotosClient) DeleteVideoFromAlbum(ctx context.Context, opts ...grpc.CallOption) (NewPhotos_DeleteVideoFromAlbumClient, error) {
+	stream, err := c.cc.NewStream(ctx, &NewPhotos_ServiceDesc.Streams[10], "/main.NewPhotos/DeleteVideoFromAlbum", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &newPhotosDeleteVideoFromAlbumClient{stream}
+	return x, nil
+}
+
+type NewPhotos_DeleteVideoFromAlbumClient interface {
+	Send(*DeleteVideoFromAlbumRequest) error
+	CloseAndRecv() (*DeleteVideoFromAlbumResponse, error)
+	grpc.ClientStream
+}
+
+type newPhotosDeleteVideoFromAlbumClient struct {
+	grpc.ClientStream
+}
+
+func (x *newPhotosDeleteVideoFromAlbumClient) Send(m *DeleteVideoFromAlbumRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *newPhotosDeleteVideoFromAlbumClient) CloseAndRecv() (*DeleteVideoFromAlbumResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(DeleteVideoFromAlbumResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *newPhotosClient) GetAlbumInfo(ctx context.Context, in *GetAlbumInfoRequest, opts ...grpc.CallOption) (*GetAlbumInfoResponse, error) {
+	out := new(GetAlbumInfoResponse)
+	err := c.cc.Invoke(ctx, "/main.NewPhotos/GetAlbumInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *newPhotosClient) GetFullPhotoByThumbnail(ctx context.Context, in *GetFullPhotoByThumbnailRequest, opts ...grpc.CallOption) (*GetFullPhotoByThumbnailResponse, error) {
+	out := new(GetFullPhotoByThumbnailResponse)
+	err := c.cc.Invoke(ctx, "/main.NewPhotos/GetFullPhotoByThumbnail", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NewPhotosServer is the server API for NewPhotos service.
 // All implementations must embed UnimplementedNewPhotosServer
 // for forward compatibility
 type NewPhotosServer interface {
-	// Returns all the photos of the passed user ...
-	AllPhotos(*AllPhotosRequest, NewPhotos_AllPhotosServer) error
-	// Uploads equal photo of the passed user ...
-	UploadEqualPhoto(context.Context, *UploadEqualPhotoRequest) (*UploadEqualPhotoResponse, error)
-	// Returns current available storage for storing of the passed user ...
+	GetPhotos(*GetPhotosRequest, NewPhotos_GetPhotosServer) error
+	GetVideos(*GetVideosRequest, NewPhotos_GetVideosServer) error
+	UploadPhoto(NewPhotos_UploadPhotoServer) error
+	UploadVideo(NewPhotos_UploadVideoServer) error
 	GetUserinfo(context.Context, *GetUserinfoRequest) (*GetUserinfoResponse, error)
-	GetFullPhotoByThumbnail(context.Context, *GetFullPhotoByThumbnailRequest) (*GetFullPhotoByThumbnailResponse, error)
-	AllPhotosAlbum(*AllPhotosAlbumRequest, NewPhotos_AllPhotosAlbumServer) error
-	GetAllAlbums(*GetAllAlbumsRequest, NewPhotos_GetAllAlbumsServer) error
+	GetUserAvatar(context.Context, *GetUserAvatarRequest) (*GetUserAvatarResponse, error)
+	SetUserAvatar(context.Context, *SetUserAvatarRequest) (*SetUserAvatarResponse, error)
+	GetPhotosFromAlbum(*GetPhotosFromAlbumRequest, NewPhotos_GetPhotosFromAlbumServer) error
+	GetVideosFromAlbum(*GetVideosFromAlbumRequest, NewPhotos_GetVideosFromAlbumServer) error
+	GetAlbums(*GetAlbumsRequest, NewPhotos_GetAlbumsServer) error
 	CreateAlbum(context.Context, *CreateAlbumRequest) (*CreateAlbumResponse, error)
 	DeleteAlbum(context.Context, *DeleteAlbumRequest) (*DeleteAlbumResponse, error)
 	UploadPhotoToAlbum(NewPhotos_UploadPhotoToAlbumServer) error
+	UploadVideoToAlbum(NewPhotos_UploadVideoToAlbumServer) error
+	DeletePhotoFromAlbum(NewPhotos_DeletePhotoFromAlbumServer) error
+	DeleteVideoFromAlbum(NewPhotos_DeleteVideoFromAlbumServer) error
+	GetAlbumInfo(context.Context, *GetAlbumInfoRequest) (*GetAlbumInfoResponse, error)
+	GetFullPhotoByThumbnail(context.Context, *GetFullPhotoByThumbnailRequest) (*GetFullPhotoByThumbnailResponse, error)
 	mustEmbedUnimplementedNewPhotosServer()
 }
 
@@ -360,23 +624,35 @@ type NewPhotosServer interface {
 type UnimplementedNewPhotosServer struct {
 }
 
-func (UnimplementedNewPhotosServer) AllPhotos(*AllPhotosRequest, NewPhotos_AllPhotosServer) error {
-	return status.Errorf(codes.Unimplemented, "method AllPhotos not implemented")
+func (UnimplementedNewPhotosServer) GetPhotos(*GetPhotosRequest, NewPhotos_GetPhotosServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetPhotos not implemented")
 }
-func (UnimplementedNewPhotosServer) UploadEqualPhoto(context.Context, *UploadEqualPhotoRequest) (*UploadEqualPhotoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UploadEqualPhoto not implemented")
+func (UnimplementedNewPhotosServer) GetVideos(*GetVideosRequest, NewPhotos_GetVideosServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetVideos not implemented")
+}
+func (UnimplementedNewPhotosServer) UploadPhoto(NewPhotos_UploadPhotoServer) error {
+	return status.Errorf(codes.Unimplemented, "method UploadPhoto not implemented")
+}
+func (UnimplementedNewPhotosServer) UploadVideo(NewPhotos_UploadVideoServer) error {
+	return status.Errorf(codes.Unimplemented, "method UploadVideo not implemented")
 }
 func (UnimplementedNewPhotosServer) GetUserinfo(context.Context, *GetUserinfoRequest) (*GetUserinfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserinfo not implemented")
 }
-func (UnimplementedNewPhotosServer) GetFullPhotoByThumbnail(context.Context, *GetFullPhotoByThumbnailRequest) (*GetFullPhotoByThumbnailResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetFullPhotoByThumbnail not implemented")
+func (UnimplementedNewPhotosServer) GetUserAvatar(context.Context, *GetUserAvatarRequest) (*GetUserAvatarResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserAvatar not implemented")
 }
-func (UnimplementedNewPhotosServer) AllPhotosAlbum(*AllPhotosAlbumRequest, NewPhotos_AllPhotosAlbumServer) error {
-	return status.Errorf(codes.Unimplemented, "method AllPhotosAlbum not implemented")
+func (UnimplementedNewPhotosServer) SetUserAvatar(context.Context, *SetUserAvatarRequest) (*SetUserAvatarResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetUserAvatar not implemented")
 }
-func (UnimplementedNewPhotosServer) GetAllAlbums(*GetAllAlbumsRequest, NewPhotos_GetAllAlbumsServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetAllAlbums not implemented")
+func (UnimplementedNewPhotosServer) GetPhotosFromAlbum(*GetPhotosFromAlbumRequest, NewPhotos_GetPhotosFromAlbumServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetPhotosFromAlbum not implemented")
+}
+func (UnimplementedNewPhotosServer) GetVideosFromAlbum(*GetVideosFromAlbumRequest, NewPhotos_GetVideosFromAlbumServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetVideosFromAlbum not implemented")
+}
+func (UnimplementedNewPhotosServer) GetAlbums(*GetAlbumsRequest, NewPhotos_GetAlbumsServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetAlbums not implemented")
 }
 func (UnimplementedNewPhotosServer) CreateAlbum(context.Context, *CreateAlbumRequest) (*CreateAlbumResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAlbum not implemented")
@@ -386,6 +662,21 @@ func (UnimplementedNewPhotosServer) DeleteAlbum(context.Context, *DeleteAlbumReq
 }
 func (UnimplementedNewPhotosServer) UploadPhotoToAlbum(NewPhotos_UploadPhotoToAlbumServer) error {
 	return status.Errorf(codes.Unimplemented, "method UploadPhotoToAlbum not implemented")
+}
+func (UnimplementedNewPhotosServer) UploadVideoToAlbum(NewPhotos_UploadVideoToAlbumServer) error {
+	return status.Errorf(codes.Unimplemented, "method UploadVideoToAlbum not implemented")
+}
+func (UnimplementedNewPhotosServer) DeletePhotoFromAlbum(NewPhotos_DeletePhotoFromAlbumServer) error {
+	return status.Errorf(codes.Unimplemented, "method DeletePhotoFromAlbum not implemented")
+}
+func (UnimplementedNewPhotosServer) DeleteVideoFromAlbum(NewPhotos_DeleteVideoFromAlbumServer) error {
+	return status.Errorf(codes.Unimplemented, "method DeleteVideoFromAlbum not implemented")
+}
+func (UnimplementedNewPhotosServer) GetAlbumInfo(context.Context, *GetAlbumInfoRequest) (*GetAlbumInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAlbumInfo not implemented")
+}
+func (UnimplementedNewPhotosServer) GetFullPhotoByThumbnail(context.Context, *GetFullPhotoByThumbnailRequest) (*GetFullPhotoByThumbnailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFullPhotoByThumbnail not implemented")
 }
 func (UnimplementedNewPhotosServer) mustEmbedUnimplementedNewPhotosServer() {}
 
@@ -400,43 +691,98 @@ func RegisterNewPhotosServer(s grpc.ServiceRegistrar, srv NewPhotosServer) {
 	s.RegisterService(&NewPhotos_ServiceDesc, srv)
 }
 
-func _NewPhotos_AllPhotos_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(AllPhotosRequest)
+func _NewPhotos_GetPhotos_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetPhotosRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(NewPhotosServer).AllPhotos(m, &newPhotosAllPhotosServer{stream})
+	return srv.(NewPhotosServer).GetPhotos(m, &newPhotosGetPhotosServer{stream})
 }
 
-type NewPhotos_AllPhotosServer interface {
-	Send(*AllPhotosResponse) error
+type NewPhotos_GetPhotosServer interface {
+	Send(*GetPhotosResponse) error
 	grpc.ServerStream
 }
 
-type newPhotosAllPhotosServer struct {
+type newPhotosGetPhotosServer struct {
 	grpc.ServerStream
 }
 
-func (x *newPhotosAllPhotosServer) Send(m *AllPhotosResponse) error {
+func (x *newPhotosGetPhotosServer) Send(m *GetPhotosResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _NewPhotos_UploadEqualPhoto_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UploadEqualPhotoRequest)
-	if err := dec(in); err != nil {
+func _NewPhotos_GetVideos_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetVideosRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(NewPhotosServer).GetVideos(m, &newPhotosGetVideosServer{stream})
+}
+
+type NewPhotos_GetVideosServer interface {
+	Send(*GetVideosResponse) error
+	grpc.ServerStream
+}
+
+type newPhotosGetVideosServer struct {
+	grpc.ServerStream
+}
+
+func (x *newPhotosGetVideosServer) Send(m *GetVideosResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _NewPhotos_UploadPhoto_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(NewPhotosServer).UploadPhoto(&newPhotosUploadPhotoServer{stream})
+}
+
+type NewPhotos_UploadPhotoServer interface {
+	SendAndClose(*UploadPhotoResponse) error
+	Recv() (*UploadPhotoRequest, error)
+	grpc.ServerStream
+}
+
+type newPhotosUploadPhotoServer struct {
+	grpc.ServerStream
+}
+
+func (x *newPhotosUploadPhotoServer) SendAndClose(m *UploadPhotoResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *newPhotosUploadPhotoServer) Recv() (*UploadPhotoRequest, error) {
+	m := new(UploadPhotoRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(NewPhotosServer).UploadEqualPhoto(ctx, in)
+	return m, nil
+}
+
+func _NewPhotos_UploadVideo_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(NewPhotosServer).UploadVideo(&newPhotosUploadVideoServer{stream})
+}
+
+type NewPhotos_UploadVideoServer interface {
+	SendAndClose(*UploadVideoResponse) error
+	Recv() (*UploadVideoRequest, error)
+	grpc.ServerStream
+}
+
+type newPhotosUploadVideoServer struct {
+	grpc.ServerStream
+}
+
+func (x *newPhotosUploadVideoServer) SendAndClose(m *UploadVideoResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *newPhotosUploadVideoServer) Recv() (*UploadVideoRequest, error) {
+	m := new(UploadVideoRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
 	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/main.NewPhotos/UploadEqualPhoto",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NewPhotosServer).UploadEqualPhoto(ctx, req.(*UploadEqualPhotoRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return m, nil
 }
 
 func _NewPhotos_GetUserinfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -457,63 +803,102 @@ func _NewPhotos_GetUserinfo_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NewPhotos_GetFullPhotoByThumbnail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetFullPhotoByThumbnailRequest)
+func _NewPhotos_GetUserAvatar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserAvatarRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NewPhotosServer).GetFullPhotoByThumbnail(ctx, in)
+		return srv.(NewPhotosServer).GetUserAvatar(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/main.NewPhotos/GetFullPhotoByThumbnail",
+		FullMethod: "/main.NewPhotos/GetUserAvatar",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NewPhotosServer).GetFullPhotoByThumbnail(ctx, req.(*GetFullPhotoByThumbnailRequest))
+		return srv.(NewPhotosServer).GetUserAvatar(ctx, req.(*GetUserAvatarRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NewPhotos_AllPhotosAlbum_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(AllPhotosAlbumRequest)
+func _NewPhotos_SetUserAvatar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetUserAvatarRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NewPhotosServer).SetUserAvatar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/main.NewPhotos/SetUserAvatar",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NewPhotosServer).SetUserAvatar(ctx, req.(*SetUserAvatarRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NewPhotos_GetPhotosFromAlbum_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetPhotosFromAlbumRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(NewPhotosServer).AllPhotosAlbum(m, &newPhotosAllPhotosAlbumServer{stream})
+	return srv.(NewPhotosServer).GetPhotosFromAlbum(m, &newPhotosGetPhotosFromAlbumServer{stream})
 }
 
-type NewPhotos_AllPhotosAlbumServer interface {
-	Send(*AllPhotosAlbumResponse) error
+type NewPhotos_GetPhotosFromAlbumServer interface {
+	Send(*GetPhotosFromAlbumResponse) error
 	grpc.ServerStream
 }
 
-type newPhotosAllPhotosAlbumServer struct {
+type newPhotosGetPhotosFromAlbumServer struct {
 	grpc.ServerStream
 }
 
-func (x *newPhotosAllPhotosAlbumServer) Send(m *AllPhotosAlbumResponse) error {
+func (x *newPhotosGetPhotosFromAlbumServer) Send(m *GetPhotosFromAlbumResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _NewPhotos_GetAllAlbums_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(GetAllAlbumsRequest)
+func _NewPhotos_GetVideosFromAlbum_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetVideosFromAlbumRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(NewPhotosServer).GetAllAlbums(m, &newPhotosGetAllAlbumsServer{stream})
+	return srv.(NewPhotosServer).GetVideosFromAlbum(m, &newPhotosGetVideosFromAlbumServer{stream})
 }
 
-type NewPhotos_GetAllAlbumsServer interface {
-	Send(*GetAllAlbumsResponse) error
+type NewPhotos_GetVideosFromAlbumServer interface {
+	Send(*GetVideosFromAlbumResponse) error
 	grpc.ServerStream
 }
 
-type newPhotosGetAllAlbumsServer struct {
+type newPhotosGetVideosFromAlbumServer struct {
 	grpc.ServerStream
 }
 
-func (x *newPhotosGetAllAlbumsServer) Send(m *GetAllAlbumsResponse) error {
+func (x *newPhotosGetVideosFromAlbumServer) Send(m *GetVideosFromAlbumResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _NewPhotos_GetAlbums_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetAlbumsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(NewPhotosServer).GetAlbums(m, &newPhotosGetAlbumsServer{stream})
+}
+
+type NewPhotos_GetAlbumsServer interface {
+	Send(*GetAlbumsResponse) error
+	grpc.ServerStream
+}
+
+type newPhotosGetAlbumsServer struct {
+	grpc.ServerStream
+}
+
+func (x *newPhotosGetAlbumsServer) Send(m *GetAlbumsResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -579,6 +964,120 @@ func (x *newPhotosUploadPhotoToAlbumServer) Recv() (*UploadPhotoToAlbumRequest, 
 	return m, nil
 }
 
+func _NewPhotos_UploadVideoToAlbum_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(NewPhotosServer).UploadVideoToAlbum(&newPhotosUploadVideoToAlbumServer{stream})
+}
+
+type NewPhotos_UploadVideoToAlbumServer interface {
+	SendAndClose(*UploadVideoToAlbumResponse) error
+	Recv() (*UploadVideoToAlbumRequest, error)
+	grpc.ServerStream
+}
+
+type newPhotosUploadVideoToAlbumServer struct {
+	grpc.ServerStream
+}
+
+func (x *newPhotosUploadVideoToAlbumServer) SendAndClose(m *UploadVideoToAlbumResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *newPhotosUploadVideoToAlbumServer) Recv() (*UploadVideoToAlbumRequest, error) {
+	m := new(UploadVideoToAlbumRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _NewPhotos_DeletePhotoFromAlbum_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(NewPhotosServer).DeletePhotoFromAlbum(&newPhotosDeletePhotoFromAlbumServer{stream})
+}
+
+type NewPhotos_DeletePhotoFromAlbumServer interface {
+	SendAndClose(*DeletePhotoFromAlbumResponse) error
+	Recv() (*DeletePhotoFromAlbumRequest, error)
+	grpc.ServerStream
+}
+
+type newPhotosDeletePhotoFromAlbumServer struct {
+	grpc.ServerStream
+}
+
+func (x *newPhotosDeletePhotoFromAlbumServer) SendAndClose(m *DeletePhotoFromAlbumResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *newPhotosDeletePhotoFromAlbumServer) Recv() (*DeletePhotoFromAlbumRequest, error) {
+	m := new(DeletePhotoFromAlbumRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _NewPhotos_DeleteVideoFromAlbum_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(NewPhotosServer).DeleteVideoFromAlbum(&newPhotosDeleteVideoFromAlbumServer{stream})
+}
+
+type NewPhotos_DeleteVideoFromAlbumServer interface {
+	SendAndClose(*DeleteVideoFromAlbumResponse) error
+	Recv() (*DeleteVideoFromAlbumRequest, error)
+	grpc.ServerStream
+}
+
+type newPhotosDeleteVideoFromAlbumServer struct {
+	grpc.ServerStream
+}
+
+func (x *newPhotosDeleteVideoFromAlbumServer) SendAndClose(m *DeleteVideoFromAlbumResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *newPhotosDeleteVideoFromAlbumServer) Recv() (*DeleteVideoFromAlbumRequest, error) {
+	m := new(DeleteVideoFromAlbumRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _NewPhotos_GetAlbumInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAlbumInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NewPhotosServer).GetAlbumInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/main.NewPhotos/GetAlbumInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NewPhotosServer).GetAlbumInfo(ctx, req.(*GetAlbumInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NewPhotos_GetFullPhotoByThumbnail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFullPhotoByThumbnailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NewPhotosServer).GetFullPhotoByThumbnail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/main.NewPhotos/GetFullPhotoByThumbnail",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NewPhotosServer).GetFullPhotoByThumbnail(ctx, req.(*GetFullPhotoByThumbnailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NewPhotos_ServiceDesc is the grpc.ServiceDesc for NewPhotos service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -587,16 +1086,16 @@ var NewPhotos_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*NewPhotosServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "UploadEqualPhoto",
-			Handler:    _NewPhotos_UploadEqualPhoto_Handler,
-		},
-		{
 			MethodName: "GetUserinfo",
 			Handler:    _NewPhotos_GetUserinfo_Handler,
 		},
 		{
-			MethodName: "GetFullPhotoByThumbnail",
-			Handler:    _NewPhotos_GetFullPhotoByThumbnail_Handler,
+			MethodName: "GetUserAvatar",
+			Handler:    _NewPhotos_GetUserAvatar_Handler,
+		},
+		{
+			MethodName: "SetUserAvatar",
+			Handler:    _NewPhotos_SetUserAvatar_Handler,
 		},
 		{
 			MethodName: "CreateAlbum",
@@ -606,26 +1105,69 @@ var NewPhotos_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "DeleteAlbum",
 			Handler:    _NewPhotos_DeleteAlbum_Handler,
 		},
+		{
+			MethodName: "GetAlbumInfo",
+			Handler:    _NewPhotos_GetAlbumInfo_Handler,
+		},
+		{
+			MethodName: "GetFullPhotoByThumbnail",
+			Handler:    _NewPhotos_GetFullPhotoByThumbnail_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "AllPhotos",
-			Handler:       _NewPhotos_AllPhotos_Handler,
+			StreamName:    "GetPhotos",
+			Handler:       _NewPhotos_GetPhotos_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "AllPhotosAlbum",
-			Handler:       _NewPhotos_AllPhotosAlbum_Handler,
+			StreamName:    "GetVideos",
+			Handler:       _NewPhotos_GetVideos_Handler,
 			ServerStreams: true,
 		},
 		{
-			StreamName:    "GetAllAlbums",
-			Handler:       _NewPhotos_GetAllAlbums_Handler,
+			StreamName:    "UploadPhoto",
+			Handler:       _NewPhotos_UploadPhoto_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "UploadVideo",
+			Handler:       _NewPhotos_UploadVideo_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "GetPhotosFromAlbum",
+			Handler:       _NewPhotos_GetPhotosFromAlbum_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetVideosFromAlbum",
+			Handler:       _NewPhotos_GetVideosFromAlbum_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetAlbums",
+			Handler:       _NewPhotos_GetAlbums_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "UploadPhotoToAlbum",
 			Handler:       _NewPhotos_UploadPhotoToAlbum_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "UploadVideoToAlbum",
+			Handler:       _NewPhotos_UploadVideoToAlbum_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "DeletePhotoFromAlbum",
+			Handler:       _NewPhotos_DeletePhotoFromAlbum_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "DeleteVideoFromAlbum",
+			Handler:       _NewPhotos_DeleteVideoFromAlbum_Handler,
 			ClientStreams: true,
 		},
 	},
@@ -636,7 +1178,7 @@ var NewPhotos_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TagClient interface {
-	IsHuman(ctx context.Context, in *IsHumanRequest, opts ...grpc.CallOption) (*IsHumanResponse, error)
+	RecognizeObject(ctx context.Context, in *RecognizeObjectRequest, opts ...grpc.CallOption) (*RecognizeObjectResponse, error)
 }
 
 type tagClient struct {
@@ -647,9 +1189,9 @@ func NewTagClient(cc grpc.ClientConnInterface) TagClient {
 	return &tagClient{cc}
 }
 
-func (c *tagClient) IsHuman(ctx context.Context, in *IsHumanRequest, opts ...grpc.CallOption) (*IsHumanResponse, error) {
-	out := new(IsHumanResponse)
-	err := c.cc.Invoke(ctx, "/main.Tag/IsHuman", in, out, opts...)
+func (c *tagClient) RecognizeObject(ctx context.Context, in *RecognizeObjectRequest, opts ...grpc.CallOption) (*RecognizeObjectResponse, error) {
+	out := new(RecognizeObjectResponse)
+	err := c.cc.Invoke(ctx, "/main.Tag/RecognizeObject", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -660,7 +1202,7 @@ func (c *tagClient) IsHuman(ctx context.Context, in *IsHumanRequest, opts ...grp
 // All implementations must embed UnimplementedTagServer
 // for forward compatibility
 type TagServer interface {
-	IsHuman(context.Context, *IsHumanRequest) (*IsHumanResponse, error)
+	RecognizeObject(context.Context, *RecognizeObjectRequest) (*RecognizeObjectResponse, error)
 	mustEmbedUnimplementedTagServer()
 }
 
@@ -668,8 +1210,8 @@ type TagServer interface {
 type UnimplementedTagServer struct {
 }
 
-func (UnimplementedTagServer) IsHuman(context.Context, *IsHumanRequest) (*IsHumanResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method IsHuman not implemented")
+func (UnimplementedTagServer) RecognizeObject(context.Context, *RecognizeObjectRequest) (*RecognizeObjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecognizeObject not implemented")
 }
 func (UnimplementedTagServer) mustEmbedUnimplementedTagServer() {}
 
@@ -684,20 +1226,20 @@ func RegisterTagServer(s grpc.ServiceRegistrar, srv TagServer) {
 	s.RegisterService(&Tag_ServiceDesc, srv)
 }
 
-func _Tag_IsHuman_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IsHumanRequest)
+func _Tag_RecognizeObject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecognizeObjectRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TagServer).IsHuman(ctx, in)
+		return srv.(TagServer).RecognizeObject(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/main.Tag/IsHuman",
+		FullMethod: "/main.Tag/RecognizeObject",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TagServer).IsHuman(ctx, req.(*IsHumanRequest))
+		return srv.(TagServer).RecognizeObject(ctx, req.(*RecognizeObjectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -710,8 +1252,8 @@ var Tag_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TagServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "IsHuman",
-			Handler:    _Tag_IsHuman_Handler,
+			MethodName: "RecognizeObject",
+			Handler:    _Tag_RecognizeObject_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

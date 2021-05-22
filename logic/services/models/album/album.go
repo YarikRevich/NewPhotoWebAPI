@@ -38,7 +38,7 @@ type DELETEResponseAlbumModel struct {
 	} `json:"service"`
 }
 
-type PUPRequestAlbumModel struct {
+type PUTRequestAlbumModel struct {
 	Result struct {
 		Name string `json:"name"`
 		Data []struct {
@@ -49,7 +49,7 @@ type PUPRequestAlbumModel struct {
 	} `json:"result"`
 }
 
-type PUPResponseAlbumModel struct {
+type PUTResponseAlbumModel struct {
 	Service struct {
 		Ok      bool   `json:"ok"`
 		Message string `json:"message"`

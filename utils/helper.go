@@ -6,73 +6,89 @@ import (
 	"strings"
 )
 
-var (
-	stuffurls = []string{
-		"static",
-		"account",
-	}
-)
+func replaceAllSpaces(o []string) []string {
 
-func replaceAllSpaces(o []string)[]string{
-	
 	var result []string
-	for _, value := range o{
-		if len(value) != 0{
+	for _, value := range o {
+		if len(value) != 0 {
 			result = append(result, value)
 		}
 	}
 	return result
 }
 
-func GetFileExtension(filename string)(string){
+func GetFileExtension(filename string) string {
 
 	splittedName := strings.Split(filename, ".")
 	extension := splittedName[len(splittedName)-1]
 	return extension
 }
 
-
-func ContainsStuffUrls(url string)bool{
-	//Checks whether current url is stuff url ...
-	
-	su := replaceAllSpaces(strings.Split(url, "/"))
-	if len(su) == 0{
-		return true
+func IsAllowed(url string) bool {
+	allowed := []string{
+		"static",
+		"check_auth",
+		"sign_up",
+		"sign_in",
 	}
-	for _, value := range stuffurls{
-		if value == su[0]{
+
+	su := strings.Split(strings.TrimSuffix(strings.TrimPrefix(url, "/"), "/"), "/")
+	if len(su) == 0 {
+		return false
+	}
+	for _, value := range allowed {
+		if value == su[0] {
 			return true
 		}
-	}	
+	}
 	return false
 }
 
-func GetWishedSize(s string)(uint, uint){
+func GetWishedSize(s string) (uint, uint) {
 	splitdogsymbol := strings.Split(s, "@")[1]
 	splitxsymbol := strings.Split(splitdogsymbol, "x")
 
 	height, err := strconv.Atoi(splitxsymbol[0])
 
-	if err != nil{
+	if err != nil {
 		Logger.Errorln(err.Error())
 	}
 
 	width, err := strconv.Atoi(splitxsymbol[0])
 
-	if err != nil{
+	if err != nil {
 		Logger.Errorln(err.Error())
 	}
 
 	return uint(height), uint(width)
 }
 
-func GetCleanTags(dirty string)[]string{
+func GetCleanTags(dirty string) []string {
 	var response []string
 	split := strings.Split(dirty, ";")
-	for _, value := range split{
-		if value != ""{
+	for _, value := range split {
+		if value != "" {
 			response = append(response, value)
 		}
 	}
 	return response
+}
+
+func IsVideo(extension string) bool {
+	a := []string{
+		"mp4",
+		"mov",
+		"heic",
+		"webm",
+		"mkv",
+		"gif",
+		"avi",
+		"mp4v",
+	}
+	for _, v := range a {
+		if extension == v {
+			return true
+		}
+	}
+	return false
 }

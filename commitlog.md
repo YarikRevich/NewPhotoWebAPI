@@ -133,3 +133,10 @@ _**Commit:18**_
 - Refactored handlers
 - Added the manual of resp-req model style
 ```
+
+_**Commit:19**_
+
+```
+- Implemented new api endpoints
+- Refactored handlers
+```

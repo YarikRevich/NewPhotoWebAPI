@@ -1,197 +1,199 @@
 package detailed
 
-// import (
-// 	"NewPhotoWeb/logic/proto"
-// 	"NewPhotoWeb/logic/services/models"
-// 	_ "NewPhotoWeb/utils"
-// 	"context"
-// 	"encoding/base64"
-// 	"encoding/json"
-// 	"net/http"
+import (
+	"context"
+	"encoding/json"
+	"net/http"
 
-// 	. "NewPhotoWeb/config"
-// )
+	. "NewPhotoWeb/config"
+	"NewPhotoWeb/logic/proto"
+	detailedalbummodel "NewPhotoWeb/logic/services/models/album/detailed"
+)
 
-// type IEqualAlbumPage interface {
-// 	GetHandler(http.ResponseWriter, *http.Request)
-// 	//DeleteHandler(http.ResponseWriter, *http.Request)
-// 	//PostHandler(http.ResponseWriter, *http.Request)
-// 	//PutHandler(http.ResponseWriter, *http.Request)
-// }
+type IDetailedAlbumPage interface {
+	GetHandler() http.Handler
+	DeleteHandler() http.Handler
+	PutHandler() http.Handler
+}
 
-// type equalalbumpage struct{}
+type detailedalbum struct{}
 
-// func (a *equalalbumpage) GetHandler(w http.ResponseWriter, r *http.Request) {
-// 	session, err := Storage.Get(r, "sessionid")
+func (a *detailedalbum) GetHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		values, ok := r.URL.Query()["name"]
+		if !ok {
+			Logger.Fatalln("Album name is empty!")
+		}
 
-// 	if err != nil {
-// 		Logger.Warnln(err.Error())
-// 	}
+		session, err := Storage.Get(r, "sessionid")
+		if err != nil {
+			Logger.Warnln(err.Error())
+		}
 
-// 	resp := new(models.GetRespEqualAlbumModel)
+		resp := new(detailedalbummodel.GETResponseEqualAlbumModel)
 
-// 	values, okValue := r.URL.Query()["name"]
+		grpcStreamPhotosResp, err := NPC.GetPhotosFromAlbum(context.Background(), &proto.GetPhotosFromAlbumRequest{Userid: session.Values["userid"].(string), Name: values[0]})
+		if err != nil {
+			Logger.ClientError()
+		}
 
-// 	userid, okUserid := session.Values["userid"].(string)
+		for {
+			recv, err := grpcStreamPhotosResp.Recv()
+			if err != nil {
+				break
+			}
+			resp.Result.Photos = append(resp.Result.Photos, struct {
+				Photo     string "json:\"photo\""
+				Thumbnail string "json:\"thumbnail\""
+				Extension string "json:\"extension\""
+			}{
+				string(recv.GetPhoto()),
+				string(recv.GetThumbnail()),
+				recv.GetExtension(),
+			})
+		}
+		if err = grpcStreamPhotosResp.CloseSend(); err != nil {
+			Logger.Fatalln(err.Error())
+		}
 
-// 	if okValue && okUserid {
+		grpcStreamVideosResp, err := NPC.GetVideosFromAlbum(context.Background(), &proto.GetVideosFromAlbumRequest{Userid: session.Values["userid"].(string), Name: values[0]})
+		if err != nil {
+			Logger.ClientError()
+		}
 
-// 		resp.Service.Ok = true
-		
-// 		stream, err := NPC.AllPhotosAlbum(context.Background(), &proto.AllPhotosAlbumRequest{Userid: userid, Name: values[0]})
-// 		if err != nil {
-// 			Logger.ClientError()
-// 			return
-// 		}
-// 		for {
-// 			recv, err := stream.Recv()
-// 			if err != nil{
-// 				break
-// 			}
+		for {
+			recv, err := grpcStreamVideosResp.Recv()
+			if err != nil {
+				break
+			}
 
-// 			resp.Result = append(resp.Result, struct{
-// 				Photo string "json:\"photo\""
-// 				Thumbnail string "json:\"thumbnail\""
-// 			}{
-// 				base64.StdEncoding.EncodeToString(recv.GetPhoto()),
-// 				base64.StdEncoding.EncodeToString(recv.GetThumbnail()),
-// 			})
-// 		}
-// 		err = stream.CloseSend()
-// 		if err != nil {
-// 			Logger.Fatalln(err.Error())
-// 		}
-		
-// 	}else{
-// 		resp.Service.Ok = false
-// 	}
-// 	json.NewEncoder(w).Encode(resp)
-// }
+			resp.Result.Videos = append(resp.Result.Videos, struct {
+				Video     string "json:\"video\""
+				Extension string "json:\"extension\""
+			}{
+				string(recv.GetVideo()),
+				recv.GetExtension(),
+			})
+		}
+		if err = grpcStreamVideosResp.CloseSend(); err != nil {
+			Logger.Fatalln(err.Error())
+		}
 
-// func (a *equalalbumpage) PostHandler(w http.ResponseWriter, r *http.Request) {
+		resp.Result.Name = values[0]
+		resp.Service.Ok = true
 
-// 	r.ParseForm()
-// 	albumname := r.FormValue("albumname")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			Logger.Fatalln(err)
+		}
+	})
+}
 
-// 	session, err := Storage.Get(r, "sessionid")
-// 	if err != nil {
-// 		Logger.Warnln(err.Error())
-// 	}
+func (a *detailedalbum) DeleteHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, err := Storage.Get(r, "sessionid")
+		if err != nil {
+			Logger.Warnln(err)
+		}
 
-// 	var tempvar utils.AlbumPageVars
+		var req detailedalbummodel.DELETERequestEqualAlbumModel
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			Logger.Fatalln(err)
+		}
 
-// 	response, err := NPC.CreateAlbum(context.Background(), &proto.CreateAlbumRequest{Userid: session.Values["userid"].(string), Name: albumname})
-// 	if err != nil {
-// 		Logger.ClientError()
-// 		return
-// 	}
-// 	switch response.Error {
-// 	case "OK":
-// 		tempvar.Messages = append(tempvar.Messages, utils.Messages{Type: "Success", Body: fmt.Sprintf("Album %s was successfully created", albumname)})
-// 	default:
-// 		tempvar.Messages = append(tempvar.Messages, utils.Messages{Type: "Error", Body: fmt.Sprintf("Something went wrong creating %s album", albumname)})
-// 	}
-// 	http.Redirect(w, r, "/albums", 301)
-// }
+		grpcRespPhotoStream, err := NPC.DeletePhotoFromAlbum(context.Background())
+		if err != nil {
+			Logger.ClientError()
+		}
 
-// func (a *equalalbumpage) DeleteHandler(w http.ResponseWriter, r *http.Request) {
-// 	//Post handler for account page ...
+		grpcRespVideoStream, err := NPC.DeleteVideoFromAlbum(context.Background())
+		if err != nil {
+			Logger.ClientError()
+		}
 
-// 	r.ParseForm()
-// 	albumname := r.FormValue("albumname")
+		for _, v := range req.Data.Photos {
+			if err := grpcRespPhotoStream.Send(&proto.DeletePhotoFromAlbumRequest{Userid: session.Values["userid"].(string), Photo: []byte(v), Album: req.Data.Name}); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
 
-// 	session, err := Storage.Get(r, "sessionid")
-// 	if err != nil {
-// 		Logger.Warn(err.Error())
-// 	}
+		for _, v := range req.Data.Videos {
+			if err := grpcRespVideoStream.Send(&proto.DeleteVideoFromAlbumRequest{Userid: session.Values["userid"].(string), Video: []byte(v), Album: req.Data.Name}); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
 
-// 	var tempvar utils.AlbumPageVars
+		grpcRespPhoto, err := grpcRespPhotoStream.CloseAndRecv()
+		if err != nil {
+			Logger.ClientError()
+		}
 
-// 	result, err := NPC.DeleteAlbum(context.Background(), &proto.DeleteAlbumRequest{Userid: session.Values["userid"].(string), Name: albumname})
-// 	if err != nil {
-// 		Logger.ClientError()
-// 		return
-// 	}
+		grpcRespVideo, err := grpcRespVideoStream.CloseAndRecv()
+		if err != nil {
+			Logger.ClientError()
+		}
 
-// 	switch result.Error {
-// 	case "OK":
-// 		tempvar.Messages = append(tempvar.Messages, utils.Messages{Type: "Success", Body: fmt.Sprintf("Album %s was successfully deleted", albumname)})
-// 	default:
-// 		tempvar.Messages = append(tempvar.Messages, utils.Messages{Type: "Error", Body: fmt.Sprintf("Something went wrong deleting %s album", albumname)})
-// 	}
-// 	http.Redirect(w, r, "/albums", 301)
-// }
+		var resp detailedalbummodel.DELETEResponseEqualAlbumModel
+		if grpcRespPhoto.GetOk() && grpcRespVideo.GetOk() {
+			resp.Service.Ok = true
+		}
+		if err := json.NewEncoder(w).Encode(&resp); err != nil {
+			Logger.Fatalln(err)
+		}
+	})
+}
 
-// func (a *equalalbumpage) PutHandler(w http.ResponseWriter, r *http.Request) {
+func (a *detailedalbum) PutHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, err := Storage.Get(r, "sessionid")
+		if err != nil {
+			Logger.Warnln(err.Error())
+		}
+		var req detailedalbummodel.PUTRequestEqualAlbumModel
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			Logger.Fatalln(err)
+		}
 
-// 	reader, err := r.MultipartReader()
+		streamImage, err := NPC.UploadPhotoToAlbum(context.Background())
+		if err != nil {
+			Logger.ClientError()
+		}
 
-// 	if err != nil {
-// 		Logger.Fatalln(err.Error())
-// 	}
+		streamVideo, err := NPC.UploadVideoToAlbum(context.Background())
+		if err != nil {
+			Logger.ClientError()
+		}
 
-// 	session, err := Storage.Get(r, "sessionid")
-// 	if err != nil {
-// 		Logger.Warnln(err.Error())
-// 	}
+		for _, v := range req.Data.Photos {
+			if err = streamImage.Send(&proto.UploadPhotoToAlbumRequest{Userid: session.Values["userid"].(string), Photo: []byte(v.File), Extension: v.Extension, Size: float64(v.Size), Album: req.Data.Name}); err != nil {
+				Logger.Fatalln(err.Error())
+			}
+		}
 
-// 	stream, err := NPC.UploadPhotoToAlbum(context.Background())
+		for _, v := range req.Data.Videos {
+			if err = streamVideo.Send(&proto.UploadVideoToAlbumRequest{Userid: session.Values["userid"].(string), Video: []byte(v.File), Extension: v.Extension, Size: float64(v.Size), Album: req.Data.Name}); err != nil {
+				Logger.Fatalln(err.Error())
+			}
+		}
 
-// 	if err != nil {
-// 		Logger.Fatalln(err.Error())
-// 	}
+		grpcRespPhotos, err := streamImage.CloseAndRecv()
+		if err != nil {
+			Logger.Fatalln(err)
+		}
+		grpcRespVideos, err := streamVideo.CloseAndRecv()
+		if err != nil {
+			Logger.Fatalln(err)
+		}
+		var resp detailedalbummodel.PUTResponseEqualAlbumModel
+		if grpcRespPhotos.GetOk() && grpcRespVideos.GetOk() {
+			resp.Service.Ok = true
+		}
 
-// 	var albumname string
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			Logger.Fatalln(err)
+		}
+	})
+}
 
-// 	for {
-// 		res, err := reader.NextPart()
-
-// 		if err == io.EOF {
-// 			stream.CloseSend()
-// 			break
-// 		}
-
-// 		switch res.FormName() {
-// 		case "album":
-// 			var albumsrc bytes.Buffer
-// 			_, err := io.Copy(&albumsrc, res)
-// 			if err != nil {
-// 				Logger.Errorln(err.Error())
-// 				continue
-// 			}
-// 			albumname = albumsrc.String()
-// 		case "file":
-// 			var file bytes.Buffer
-// 			size, err := io.Copy(&file, res)
-// 			if err != nil {
-// 				Logger.Errorln(err.Error())
-// 				continue
-// 			}
-// 			err = stream.Send(&proto.UploadPhotoToAlbumRequest{Userid: session.Values["userid"].(string), Photo: file.Bytes(), Extension: utils.GetFileExtension(res.FileName()), Size: float64(size), Album: albumname})
-// 			if err != nil {
-// 				Logger.Errorln(err.Error())
-// 				continue
-// 			}
-// 		case "files":
-// 			// if ext := strings.Split(res.FileName(), ".")[1]; ext == "jpeg" || ext == "png" || ext == "jpg" {
-// 			// 	var file bytes.Buffer
-// 			// 	size, err := io.Copy(&file, res)
-// 			// 	if err != nil {
-// 			// 		Logger.Errorln(err.Error())
-// 			// 		continue
-// 			// 	}
-// 			// 	err = stream.Send(&proto.UploadPhotoToAlbumRequest{Userid: session.Values["userid"].(string), Photo: file.Bytes(), Extension: utils.GetFileExtension(res.FileName()), Size: float64(size), Album: albumname})
-// 			// 	if err != nil {
-// 			// 		Logger.Errorln(err.Error(), "HERE")
-// 			// 		continue
-// 			// 	}
-// 			// }
-// 		}
-
-// 	}
-// 	http.Redirect(w, r, "/albums", 301)
-// }
-
-// func NewEqualAlbumPageHandler() IEqualAlbumPage {
-// 	return new(equalalbumpage)
-// }
+func NewDetailedAlbumPageHandler() IDetailedAlbumPage {
+	return new(detailedalbum)
+}

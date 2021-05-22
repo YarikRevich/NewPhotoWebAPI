@@ -1,10 +1,13 @@
 package middlewares
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
 	. "NewPhotoWeb/config"
+	errormodel "NewPhotoWeb/logic/services/models/error"
+	"NewPhotoWeb/utils"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -13,10 +16,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		if err != nil {
 			Logger.Warnln(err.Error())
 		}
-		if _, ok := session.Values["userid"]; ok {
+		if _, ok := session.Values["userid"]; ok || utils.IsAllowed(r.URL.Path) {
 			next.ServeHTTP(w, r)
 		} else {
-			w.Write([]byte(http.ErrBodyNotAllowed.Error()))
+			resp := new(errormodel.ERRORAuthModel)
+			resp.Service.Error = errormodel.AUTH_ERROR
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 	})
 }

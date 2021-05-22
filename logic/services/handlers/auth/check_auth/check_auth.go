@@ -25,7 +25,9 @@ func (a *checkauth) GetHandler() http.Handler {
 		if _, ok := session.Values["loggedin"]; ok {
 			resp.Service.Ok = true
 		}
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil{
+			Logger.Fatalln(err)
+		}
 	})
 
 }
