@@ -2,13 +2,14 @@ package detailed
 
 import (
 	"context"
-	"net/http"
-	"encoding/json"
 	"encoding/base64"
+	"encoding/json"
+	"net/http"
 
 	"NewPhotoWeb/logic/proto"
+	errormodel "NewPhotoWeb/logic/services/models/error"
 	detailedphotomodel "NewPhotoWeb/logic/services/models/photo/detailed"
-	
+
 	. "NewPhotoWeb/config"
 )
 
@@ -30,12 +31,29 @@ func (a *detailedphoto) GetHandler() http.Handler {
 			Logger.Fatalln(err)
 		}
 
-		session, err := Storage.Get(r, "sessionid")
+		errResp := new(errormodel.ERRORAuthModel)
+		errResp.Service.Error = errormodel.AUTH_ERROR
+		at, err := r.Cookie("at")
 		if err != nil {
-			Logger.Warnln(err.Error())
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
+		lt, err := r.Cookie("lt")
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 
-		grpcResp, err := NPC.GetFullPhotoByThumbnail(context.Background(), &proto.GetFullPhotoByThumbnailRequest{Userid: session.Values["userid"].(string), Thumbnail: efile})
+		grpcResp, err := NPC.GetFullPhotoByThumbnail(
+			context.Background(),
+			&proto.GetFullPhotoByThumbnailRequest{
+				AccessToken: at.Value,
+				LoginToken:  lt.Value,
+				Thumbnail:   efile,
+			},
+		)
 		if err != nil {
 			Logger.Fatalln(err)
 		}

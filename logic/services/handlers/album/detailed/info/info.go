@@ -8,6 +8,7 @@ import (
 	. "NewPhotoWeb/config"
 	"NewPhotoWeb/logic/proto"
 	infodetailedalbummodel "NewPhotoWeb/logic/services/models/album/detailed/info"
+	errormodel "NewPhotoWeb/logic/services/models/error"
 )
 
 type IInfoDetailedAlbumPage interface {
@@ -23,12 +24,29 @@ func (a *infodetailedalbum) GetHandler() http.Handler {
 			Logger.Fatalln("Album name is empty!")
 		}
 
-		session, err := Storage.Get(r, "sessionid")
+		errResp := new(errormodel.ERRORAuthModel)
+		errResp.Service.Error = errormodel.AUTH_ERROR
+		at, err := r.Cookie("at")
 		if err != nil {
-			Logger.Warnln(err.Error())
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
+		lt, err := r.Cookie("lt")
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 
-		grpcResp, err := NPC.GetAlbumInfo(context.Background(), &proto.GetAlbumInfoRequest{Userid: session.Values["userid"].(string), Album: values[0]})
+		grpcResp, err := NPC.GetAlbumInfo(
+			context.Background(),
+			&proto.GetAlbumInfoRequest{
+				AccessToken: at.Value,
+				LoginToken:  lt.Value,
+				Album:       values[0],
+			},
+		)
 		if err != nil {
 			Logger.ClientError()
 		}
