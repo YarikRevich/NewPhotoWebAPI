@@ -3,6 +3,7 @@ package handlers
 import (
 	"NewPhotoWeb/logic/proto"
 	albummodel "NewPhotoWeb/logic/services/models/album"
+	errormodel "NewPhotoWeb/logic/services/models/error"
 	"bytes"
 	"context"
 	"encoding/base64"
@@ -31,12 +32,28 @@ func (a *album) GetHandler() http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		session, err := Storage.Get(r, "sessionid")
+		errResp := new(errormodel.ERRORAuthModel)
+		errResp.Service.Error = errormodel.AUTH_ERROR
+		at, err := r.Cookie("at")
 		if err != nil {
-			Logger.Warnln(err.Error())
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
+		lt, err := r.Cookie("lt")
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 
-		grpcResp, err := NPC.GetAlbums(context.Background(), &proto.GetAlbumsRequest{Userid: session.Values["userid"].(string)})
+		grpcResp, err := NPC.GetAlbums(
+			context.Background(),
+			&proto.GetAlbumsRequest{
+				AccessToken: at.Value,
+				LoginToken:  lt.Value,
+			},
+		)
 		if err != nil {
 			Logger.ClientError()
 		}
@@ -74,14 +91,31 @@ func (a *album) PostHandler() http.Handler {
 			Logger.Fatalln(err)
 		}
 
-		session, err := Storage.Get(r, "sessionid")
+		errResp := new(errormodel.ERRORAuthModel)
+		errResp.Service.Error = errormodel.AUTH_ERROR
+		at, err := r.Cookie("at")
 		if err != nil {
-			Logger.Warnln(err)
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
+		lt, err := r.Cookie("lt")
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 
 		resp := new(albummodel.POSTResponseAlbumModel)
 
-		grpcResp, err := NPC.CreateAlbum(context.Background(), &proto.CreateAlbumRequest{Userid: session.Values["userid"].(string), Name: req.Data.Name})
+		grpcResp, err := NPC.CreateAlbum(
+			context.Background(),
+			&proto.CreateAlbumRequest{
+				AccessToken: at.Value,
+				LoginToken:  lt.Value,
+				Name:        req.Data.Name,
+			},
+		)
 		if err != nil {
 			Logger.Fatalln(err)
 		}
@@ -100,26 +134,42 @@ func (a *album) DeleteHandler() http.Handler {
 	//Post handler for account page ...
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		var req albummodel.DELETERequestAlbumModel
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			Logger.Fatalln(err)
+		values, ok := r.URL.Query()["name"]
+		if !ok {
+			Logger.Fatalln("Album name was not passed")
 		}
 
-		session, err := Storage.Get(r, "sessionid")
+		errResp := new(errormodel.ERRORAuthModel)
+		errResp.Service.Error = errormodel.AUTH_ERROR
+		at, err := r.Cookie("at")
 		if err != nil {
-			Logger.Warn(err.Error())
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
+		lt, err := r.Cookie("lt")
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 
 		resp := new(albummodel.DELETEResponseAlbumModel)
 
-		grpcResp, err := NPC.DeleteAlbum(context.Background(), &proto.DeleteAlbumRequest{Userid: session.Values["userid"].(string), Name: req.Data.Name})
+		grpcResp, err := NPC.DeleteAlbum(
+			context.Background(),
+			&proto.DeleteAlbumRequest{
+				AccessToken: at.Value,
+				LoginToken:  lt.Value,
+				Name:        values[0],
+			},
+		)
 		if err != nil {
 			Logger.Fatalln(err.Error())
 		}
 
 		if grpcResp.GetOk() {
-			resp.Service.Message = fmt.Sprintf("Something went wrong deleting %s album", req.Data.Name)
+			resp.Service.Message = fmt.Sprintf("Something went wrong deleting %s album", values[0])
 		}
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -137,9 +187,19 @@ func (a *album) PutHandler() http.Handler {
 			Logger.Fatalln(err)
 		}
 
-		session, err := Storage.Get(r, "sessionid")
+		errResp := new(errormodel.ERRORAuthModel)
+		errResp.Service.Error = errormodel.AUTH_ERROR
+		at, err := r.Cookie("at")
 		if err != nil {
-			Logger.Warnln(err.Error())
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
+		lt, err := r.Cookie("lt")
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 
 		grpcResp, err := NPC.UploadPhotoToAlbum(context.Background())
@@ -179,7 +239,17 @@ func (a *album) PutHandler() http.Handler {
 				Logger.Fatalln(err)
 			}
 
-			if err := grpcResp.Send(&proto.UploadPhotoToAlbumRequest{Userid: session.Values["userid"].(string), Photo: efile, Thumbnail: thumbnail.Bytes(), Extension: value.Extension, Size: value.Size, Album: req.Result.Name}); err != nil {
+			if err := grpcResp.Send(
+				&proto.UploadPhotoToAlbumRequest{
+					AccessToken: at.Value,
+					LoginToken:  lt.Value,
+					Photo:       efile,
+					Thumbnail:   thumbnail.Bytes(),
+					Extension:   value.Extension,
+					Size:        value.Size,
+					Album:       req.Result.Name,
+				},
+			); err != nil {
 				Logger.Fatalln(err)
 			}
 		}

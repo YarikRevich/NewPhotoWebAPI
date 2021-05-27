@@ -40,17 +40,8 @@ func (a *signin) PostHandler() http.Handler {
 		resp := new(signinmodel.GETResponseSignInModel)
 
 		if grpcResp.GetOk() {
-			session, err := Storage.Get(r, "sessionid")
-			if err != nil {
-				Logger.Warnln(err.Error())
-			}
-			session.Values["userid"] = grpcResp.GetUserid()
-			session.Values["loggedin"] = "true"
-			err = session.Save(r, w)
-			if err != nil {
-				Logger.Warnln(err.Error())
-			}
-
+			http.SetCookie(w, &http.Cookie{Name: "at", Value: grpcResp.AccessToken})
+			http.SetCookie(w, &http.Cookie{Name: "lt", Value: grpcResp.LoginToken})
 			resp.Service.Ok = true
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {

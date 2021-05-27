@@ -7,6 +7,7 @@ import (
 
 	"NewPhotoWeb/logic/proto"
 	avatarmodel "NewPhotoWeb/logic/services/models/account/avatar"
+	errormodel "NewPhotoWeb/logic/services/models/error"
 
 	. "NewPhotoWeb/config"
 )
@@ -20,12 +21,28 @@ type avatar struct{}
 
 func (a *avatar) GetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := Storage.Get(r, "sessionid")
+		errResp := new(errormodel.ERRORAuthModel)
+		errResp.Service.Error = errormodel.AUTH_ERROR
+		at, err := r.Cookie("at")
 		if err != nil {
-			Logger.Warn(err.Error())
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
+		lt, err := r.Cookie("lt")
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 
-		grpcResp, err := NPC.GetUserAvatar(context.Background(), &proto.GetUserAvatarRequest{Userid: session.Values["userid"].(string)})
+		grpcResp, err := NPC.GetUserAvatar(
+			context.Background(),
+			&proto.GetUserAvatarRequest{
+				AccessToken: at.Value,
+				LoginToken:  lt.Value,
+			},
+		)
 		if err != nil {
 			Logger.ClientError()
 		}
@@ -43,9 +60,19 @@ func (a *avatar) GetHandler() http.Handler {
 
 func (a *avatar) PostHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := Storage.Get(r, "sessionid")
+		errResp := new(errormodel.ERRORAuthModel)
+		errResp.Service.Error = errormodel.AUTH_ERROR
+		at, err := r.Cookie("at")
 		if err != nil {
-			Logger.Warn(err.Error())
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
+		lt, err := r.Cookie("lt")
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 
 		var req avatarmodel.POSTRequestAvatarModel
@@ -53,7 +80,14 @@ func (a *avatar) PostHandler() http.Handler {
 			Logger.Fatalln(err)
 		}
 
-		grpcResp, err := NPC.SetUserAvatar(context.Background(), &proto.SetUserAvatarRequest{Userid: session.Values["userid"].(string), Avatar: []byte(req.Data.Avatar)})
+		grpcResp, err := NPC.SetUserAvatar(
+			context.Background(),
+			&proto.SetUserAvatarRequest{
+				AccessToken: at.Value,
+				LoginToken:  lt.Value,
+				Avatar:      []byte(req.Data.Avatar),
+			},
+		)
 		if err != nil {
 			Logger.ClientError()
 		}

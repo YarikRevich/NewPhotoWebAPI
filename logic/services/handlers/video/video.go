@@ -1,22 +1,12 @@
 package video
 
 import (
-	"context"
-	// "bytes"
-	// "context"
-	// "encoding/base64"
-	"encoding/json"
-	// "image"
-	// "image/jpeg"
-	// "image/png"
-	"net/http"
-
-	// "github.com/nfnt/resize"
-	// "google.golang.org/grpc"
-
-	// "NewPhotoWeb/logic/proto"
 	"NewPhotoWeb/logic/proto"
+	errormodel "NewPhotoWeb/logic/services/models/error"
 	videomodel "NewPhotoWeb/logic/services/models/video"
+	"context"
+	"encoding/json"
+	"net/http"
 
 	. "NewPhotoWeb/config"
 )
@@ -68,9 +58,19 @@ type video struct{}
 
 func (a *video) PostHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := Storage.Get(r, "sessionid")
+		errResp := new(errormodel.ERRORAuthModel)
+		errResp.Service.Error = errormodel.AUTH_ERROR
+		at, err := r.Cookie("at")
 		if err != nil {
-			Logger.Fatalln(err)
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
+		lt, err := r.Cookie("lt")
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 
 		var req videomodel.POSTRequestVideoModel
@@ -84,10 +84,11 @@ func (a *video) PostHandler() http.Handler {
 		}
 		for _, v := range req.Data {
 			if err := stream.Send(&proto.UploadVideoRequest{
-				Userid:    session.Values["userid"].(string),
-				Video:     []byte(v.File),
-				Extension: v.Extension,
-				Size:      v.Size,
+				AccessToken: at.Value,
+				LoginToken:  lt.Value,
+				Video:       []byte(v.File),
+				Extension:   v.Extension,
+				Size:        v.Size,
 			}); err != nil {
 				Logger.ClientError()
 			}

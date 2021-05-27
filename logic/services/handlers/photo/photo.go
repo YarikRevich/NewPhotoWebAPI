@@ -11,9 +11,9 @@ import (
 	"net/http"
 
 	"github.com/nfnt/resize"
-	"google.golang.org/grpc"
 
 	"NewPhotoWeb/logic/proto"
+	errormodel "NewPhotoWeb/logic/services/models/error"
 	photomodel "NewPhotoWeb/logic/services/models/photo"
 	"NewPhotoWeb/utils"
 
@@ -31,12 +31,28 @@ func (a *photo) GetHandler() http.Handler {
 	//Get handler for photo page ...
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := Storage.Get(r, "sessionid")
+		errResp := new(errormodel.ERRORAuthModel)
+		errResp.Service.Error = errormodel.AUTH_ERROR
+		at, err := r.Cookie("at")
 		if err != nil {
-			Logger.Warnln(err.Error())
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
+		lt, err := r.Cookie("lt")
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 
-		grpcResp, err := NPC.GetPhotos(context.Background(), &proto.GetPhotosRequest{Userid: session.Values["userid"].(string)}, grpc.MaxCallRecvMsgSize(32*10e6), grpc.MaxCallSendMsgSize(32*10e6))
+		grpcResp, err := NPC.GetPhotos(
+			context.Background(),
+			&proto.GetPhotosRequest{
+				AccessToken: at.Value,
+				LoginToken:  lt.Value,
+			},
+		)
 		if err != nil {
 			Logger.ClientError()
 		}
@@ -69,10 +85,20 @@ func (a *photo) PostHandler() http.Handler {
 	//Post handler for photo page ...
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	
-		session, err := Storage.Get(r, "sessionid")
+
+		errResp := new(errormodel.ERRORAuthModel)
+		errResp.Service.Error = errormodel.AUTH_ERROR
+		at, err := r.Cookie("at")
 		if err != nil {
-			Logger.Warn(err.Error())
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
+		}
+		lt, err := r.Cookie("lt")
+		if err != nil {
+			if err := json.NewEncoder(w).Encode(errResp); err != nil {
+				Logger.Fatalln(err)
+			}
 		}
 
 		var req photomodel.POSTRequestPhotoModel
@@ -115,11 +141,12 @@ func (a *photo) PostHandler() http.Handler {
 			}
 
 			if err = stream.Send(&proto.UploadPhotoRequest{
-				Userid:    session.Values["userid"].(string),
-				Photo:     []byte(base64.StdEncoding.EncodeToString(efile)),
-				Thumbnail: thumbnail.Bytes(),
-				Extension: value.Extension,
-				Size:      value.Size,
+				AccessToken: at.Value,
+				LoginToken:  lt.Value,
+				Photo:       []byte(base64.StdEncoding.EncodeToString(efile)),
+				Thumbnail:   thumbnail.Bytes(),
+				Extension:   value.Extension,
+				Size:        value.Size,
 			}); err != nil {
 				Logger.ClientError()
 			}
