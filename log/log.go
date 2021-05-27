@@ -2,9 +2,15 @@ package log
 
 import (
 	"os"
+	"strings"
 
 	"github.com/mbndr/figlet4go"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	ProdPath = "log/error.log"
+	TestPath = "../log/error.log"
 )
 
 type Logger struct {
@@ -27,12 +33,16 @@ func (l *Logger) ClientError() {
 }
 
 func (l *Logger) OpenLogFile() *os.File {
-	if _, err := os.Stat("error.log"); os.IsNotExist(err) {
-		if _, err := os.Create("error.log"); err != nil {
+	path := ProdPath
+	if f, err := os.Executable(); err == nil && strings.Contains(f, "test") {
+		path = TestPath
+	}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if _, err := os.Create(path); err != nil {
 			l.Fatalln(err)
 		}
 	}
-	f, err := os.OpenFile("error.log", os.O_WRONLY|os.O_APPEND, os.ModeAppend)
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, os.ModeAppend)
 	if err != nil {
 		l.Fatalln(err)
 	}

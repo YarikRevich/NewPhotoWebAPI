@@ -1,17 +1,5 @@
 package models
 
-// type GETResponseAlbumModel struct {
-// 	Result []struct {
-// 		Photo     string   `json:"photo"`
-// 		Thumbnail string   `json:"thumbnail"`
-// 		Tags      []string `json:"tags"`
-// 	} `json:"result"`
-// 	Service struct {
-// 		Message string `json:"message"`
-// 		Ok      bool   `json:"ok"`
-// 	} `json:"service"`
-// }
-
 type POSTRequestVideoModel struct {
 	Data []struct {
 		File      string  `json:"file"`

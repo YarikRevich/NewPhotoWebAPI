@@ -3,6 +3,7 @@ package avatar
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"NewPhotoWeb/logic/proto"
@@ -21,6 +22,8 @@ type avatar struct{}
 
 func (a *avatar) GetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.Cookies())
+		fmt.Println(r.Cookie("at"))
 		errResp := new(errormodel.ERRORAuthModel)
 		errResp.Service.Error = errormodel.AUTH_ERROR
 		at, err := r.Cookie("at")
@@ -28,14 +31,15 @@ func (a *avatar) GetHandler() http.Handler {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 		lt, err := r.Cookie("lt")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
-
 		grpcResp, err := NPC.GetUserAvatar(
 			context.Background(),
 			&proto.GetUserAvatarRequest{
@@ -67,12 +71,14 @@ func (a *avatar) PostHandler() http.Handler {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 		lt, err := r.Cookie("lt")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 
 		var req avatarmodel.POSTRequestAvatarModel
@@ -96,6 +102,7 @@ func (a *avatar) PostHandler() http.Handler {
 		if grpcResp.GetOk() {
 			resp.Service.Ok = true
 		}
+
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			Logger.Fatalln(err)
 		}
