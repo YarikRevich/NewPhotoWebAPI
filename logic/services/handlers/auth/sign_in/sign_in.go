@@ -21,7 +21,6 @@ func (a *signin) PostHandler() http.Handler {
 	//Post handler for account page ...
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		var req signinmodel.GETRequestSignInModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			Logger.Fatalln(err)
@@ -40,8 +39,8 @@ func (a *signin) PostHandler() http.Handler {
 		resp := new(signinmodel.GETResponseSignInModel)
 
 		if grpcResp.GetOk() {
-			http.SetCookie(w, &http.Cookie{Name: "at", Value: grpcResp.AccessToken})
-			http.SetCookie(w, &http.Cookie{Name: "lt", Value: grpcResp.LoginToken})
+			http.SetCookie(w, &http.Cookie{Name: "at", Value: grpcResp.AccessToken, Path: "/"})
+			http.SetCookie(w, &http.Cookie{Name: "lt", Value: grpcResp.LoginToken, Path: "/"})
 			resp.Service.Ok = true
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {

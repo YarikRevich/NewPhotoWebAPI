@@ -14,30 +14,36 @@ import (
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-		}
 		if utils.IsAllowed(r.URL.Path) {
 			next.ServeHTTP(w, r)
 		} else {
+			errResp := new(errormodel.ERRORAuthModel)
+			errResp.Service.Error = errormodel.AUTH_ERROR
+			at, err := r.Cookie("at")
+			if err != nil {
+				if err := json.NewEncoder(w).Encode(errResp); err != nil {
+					Logger.Fatalln(err)
+				}
+				return
+			}
+			lt, err := r.Cookie("lt")
+			if err != nil {
+				if err := json.NewEncoder(w).Encode(errResp); err != nil {
+					Logger.Fatalln(err)
+				}
+				return
+			}
+
 			grpcResp, err := AC.RetrieveToken(context.Background(), &proto.RetrieveTokenRequest{AccessToken: at.Value, LoginToken: lt.Value})
 			if err != nil {
 				Logger.ClientError()
 			}
 			if grpcResp.GetOk() {
-				http.SetCookie(w, &http.Cookie{Name: "at", Value: grpcResp.AccessToken})
-				http.SetCookie(w, &http.Cookie{Name: "lt", Value: grpcResp.LoginToken})
+				r.AddCookie(&http.Cookie{Name: "at", Value: "itworks"})
+				// http.SetCookie(w, &http.Cookie{Name: "at", Value: lt.Value, Path: "/", MaxAge: -1})
+				// http.SetCookie(w, &http.Cookie{Name: "lt", Value: lt.Value, Path: "/", MaxAge: -1})
+				// http.SetCookie(w, &http.Cookie{Name: "at", Value: grpcResp.AccessToken, Path: "/"})
+				// http.SetCookie(w, &http.Cookie{Name: "lt", Value: grpcResp.LoginToken, Path: "/"})
 				next.ServeHTTP(w, r)
 			} else {
 				resp := new(errormodel.ERRORAuthModel)

@@ -39,12 +39,14 @@ func (a *album) GetHandler() http.Handler {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 		lt, err := r.Cookie("lt")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 
 		grpcResp, err := NPC.GetAlbums(
@@ -98,12 +100,14 @@ func (a *album) PostHandler() http.Handler {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 		lt, err := r.Cookie("lt")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 
 		resp := new(albummodel.POSTResponseAlbumModel)
@@ -146,12 +150,14 @@ func (a *album) DeleteHandler() http.Handler {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 		lt, err := r.Cookie("lt")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 
 		resp := new(albummodel.DELETEResponseAlbumModel)
@@ -194,12 +200,14 @@ func (a *album) PutHandler() http.Handler {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 		lt, err := r.Cookie("lt")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 
 		grpcResp, err := NPC.UploadPhotoToAlbum(context.Background())

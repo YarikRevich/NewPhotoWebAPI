@@ -93,12 +93,14 @@ func (a *photo) PostHandler() http.Handler {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 		lt, err := r.Cookie("lt")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 
 		var req photomodel.POSTRequestPhotoModel

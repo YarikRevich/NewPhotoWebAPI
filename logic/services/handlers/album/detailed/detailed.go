@@ -33,12 +33,14 @@ func (a *detailedalbum) GetHandler() http.Handler {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 		lt, err := r.Cookie("lt")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 
 		resp := new(detailedalbummodel.GETResponseEqualAlbumModel)
@@ -123,12 +125,14 @@ func (a *detailedalbum) DeleteHandler() http.Handler {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 		lt, err := r.Cookie("lt")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 
 		var req detailedalbummodel.DELETERequestEqualAlbumModel
@@ -202,12 +206,14 @@ func (a *detailedalbum) PutHandler() http.Handler {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 		lt, err := r.Cookie("lt")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				Logger.Fatalln(err)
 			}
+			return
 		}
 		var req detailedalbummodel.PUTRequestEqualAlbumModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
