@@ -88,12 +88,15 @@ func (a *video) PostHandler() http.Handler {
 			if err := stream.Send(&proto.UploadVideoRequest{
 				AccessToken: at.Value,
 				LoginToken:  lt.Value,
-				Video:       []byte(v.File),
+				Video:       v.File,
 				Extension:   v.Extension,
 				Size:        v.Size,
 			}); err != nil {
 				Logger.ClientError()
 			}
+		}
+		if err := stream.CloseSend(); err != nil {
+			Logger.ClientError()
 		}
 
 		resp := new(videomodel.POSTResponseVideoModel)

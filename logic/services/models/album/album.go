@@ -3,8 +3,8 @@ package models
 type GETResponseAlbumModel struct {
 	Result []struct {
 		Name                 string `json:"name"`
-		LatestPhoto          string `json:"latestphoto"`
-		LatestPhotoThumbnail string `json:"latestphotothumbnail"`
+		LatestPhoto          []byte `json:"latestphoto"`
+		LatestPhotoThumbnail []byte `json:"latestphotothumbnail"`
 	} `json:"result"`
 	Service struct {
 		Ok      bool   `json:"ok"`
@@ -42,7 +42,7 @@ type PUTRequestAlbumModel struct {
 	Result struct {
 		Name string `json:"name"`
 		Data []struct {
-			File      string  `json:"file"`
+			File      []byte  `json:"file"`
 			Size      float64 `json:"size"`
 			Extension string  `json:"extension"`
 		} `json:"data"`

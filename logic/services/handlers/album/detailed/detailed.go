@@ -8,7 +8,6 @@ import (
 	. "NewPhotoWeb/config"
 	"NewPhotoWeb/logic/proto"
 	detailedalbummodel "NewPhotoWeb/logic/services/models/album/detailed"
-	errormodel "NewPhotoWeb/logic/services/models/error"
 )
 
 type IDetailedAlbumPage interface {
@@ -26,22 +25,8 @@ func (a *detailedalbum) GetHandler() http.Handler {
 			Logger.Fatalln("Album name is empty!")
 		}
 
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 
 		resp := new(detailedalbummodel.GETResponseEqualAlbumModel)
 
@@ -63,12 +48,12 @@ func (a *detailedalbum) GetHandler() http.Handler {
 				break
 			}
 			resp.Result.Photos = append(resp.Result.Photos, struct {
-				Photo     string "json:\"photo\""
-				Thumbnail string "json:\"thumbnail\""
+				Photo     []byte "json:\"photo\""
+				Thumbnail []byte "json:\"thumbnail\""
 				Extension string "json:\"extension\""
 			}{
-				string(recv.GetPhoto()),
-				string(recv.GetThumbnail()),
+				recv.GetPhoto(),
+				recv.GetThumbnail(),
 				recv.GetExtension(),
 			})
 		}
@@ -95,10 +80,10 @@ func (a *detailedalbum) GetHandler() http.Handler {
 			}
 
 			resp.Result.Videos = append(resp.Result.Videos, struct {
-				Video     string "json:\"video\""
+				Video     []byte "json:\"video\""
 				Extension string "json:\"extension\""
 			}{
-				string(recv.GetVideo()),
+				recv.GetVideo(),
 				recv.GetExtension(),
 			})
 		}
@@ -117,23 +102,8 @@ func (a *detailedalbum) GetHandler() http.Handler {
 
 func (a *detailedalbum) DeleteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 
 		var req detailedalbummodel.DELETERequestEqualAlbumModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -155,7 +125,7 @@ func (a *detailedalbum) DeleteHandler() http.Handler {
 				&proto.DeletePhotoFromAlbumRequest{
 					AccessToken: at.Value,
 					LoginToken:  lt.Value,
-					Photo:       []byte(v),
+					Photo:       v,
 					Album:       req.Data.Name,
 				},
 			); err != nil {
@@ -168,7 +138,7 @@ func (a *detailedalbum) DeleteHandler() http.Handler {
 				&proto.DeleteVideoFromAlbumRequest{
 					AccessToken: at.Value,
 					LoginToken:  lt.Value,
-					Video:       []byte(v),
+					Video:       v,
 					Album:       req.Data.Name,
 				},
 			); err != nil {
@@ -198,23 +168,9 @@ func (a *detailedalbum) DeleteHandler() http.Handler {
 
 func (a *detailedalbum) PutHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
 		var req detailedalbummodel.PUTRequestEqualAlbumModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			Logger.Fatalln(err)
@@ -235,7 +191,7 @@ func (a *detailedalbum) PutHandler() http.Handler {
 				&proto.UploadPhotoToAlbumRequest{
 					AccessToken: at.Value,
 					LoginToken:  lt.Value,
-					Photo:       []byte(v.File),
+					Photo:       v.File,
 					Extension:   v.Extension,
 					Size:        float64(v.Size),
 					Album:       req.Data.Name,
@@ -250,7 +206,7 @@ func (a *detailedalbum) PutHandler() http.Handler {
 				&proto.UploadVideoToAlbumRequest{
 					AccessToken: at.Value,
 					LoginToken:  lt.Value,
-					Video:       []byte(v.File),
+					Video:       v.File,
 					Extension:   v.Extension,
 					Size:        float64(v.Size),
 					Album:       req.Data.Name,

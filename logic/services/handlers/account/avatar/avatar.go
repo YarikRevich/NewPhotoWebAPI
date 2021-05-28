@@ -35,7 +35,7 @@ func (a *avatar) GetHandler() http.Handler {
 
 		var resp avatarmodel.GETResponseAvatarModel
 		if grpcResp.GetOk() {
-			resp.Result.Avatar = string(grpcResp.GetAvatar())
+			resp.Result.Avatar = grpcResp.GetAvatar()
 			resp.Service.Ok = true
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -59,7 +59,7 @@ func (a *avatar) PostHandler() http.Handler {
 			&proto.SetUserAvatarRequest{
 				AccessToken: at.Value,
 				LoginToken:  lt.Value,
-				Avatar:      []byte(req.Data.Avatar),
+				Avatar:      req.Data.Avatar,
 			},
 		)
 		if err != nil {

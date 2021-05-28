@@ -3,7 +3,6 @@ package photo
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"image"
 	"image/jpeg"
@@ -13,7 +12,6 @@ import (
 	"github.com/nfnt/resize"
 
 	"NewPhotoWeb/logic/proto"
-	errormodel "NewPhotoWeb/logic/services/models/error"
 	photomodel "NewPhotoWeb/logic/services/models/photo"
 	"NewPhotoWeb/utils"
 
@@ -31,20 +29,8 @@ func (a *photo) GetHandler() http.Handler {
 	//Get handler for photo page ...
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-		}
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 
 		grpcResp, err := NPC.GetPhotos(
 			context.Background(),
@@ -65,16 +51,19 @@ func (a *photo) GetHandler() http.Handler {
 			}
 
 			resp.Result = append(resp.Result, struct {
-				Photo     string   "json:\"photo\""
-				Thumbnail string   "json:\"thumbnail\""
+				Thumbnail []byte   "json:\"thumbnail\""
 				Tags      []string "json:\"tags\""
 			}{
-				base64.StdEncoding.EncodeToString(grpcStreamResp.GetPhoto()),
-				base64.StdEncoding.EncodeToString(grpcStreamResp.GetThumbnail()),
+				grpcStreamResp.GetThumbnail(),
 				utils.GetCleanTags(grpcStreamResp.GetTags()),
 			})
 		}
+
+		if err := grpcResp.CloseSend(); err != nil {
+			Logger.ClientError()
+		}
 		resp.Service.Ok = true
+
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			Logger.Fatalln(err)
 		}
@@ -85,23 +74,8 @@ func (a *photo) PostHandler() http.Handler {
 	//Post handler for photo page ...
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 
 		var req photomodel.POSTRequestPhotoModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -113,20 +87,15 @@ func (a *photo) PostHandler() http.Handler {
 			Logger.ClientError()
 		}
 		for _, value := range req.Data {
-			efile, err := base64.StdEncoding.DecodeString(value.File)
-			if err != nil {
-				Logger.Fatalln(err)
-			}
-
 			var img image.Image
 			switch value.Extension {
 			case "png":
-				img, err = png.Decode(bytes.NewReader(efile))
+				img, err = png.Decode(bytes.NewReader(value.File))
 				if err != nil {
 					Logger.Fatalln(err)
 				}
 			case "jpeg":
-				img, err = jpeg.Decode(bytes.NewReader(efile))
+				img, err = jpeg.Decode(bytes.NewReader(value.File))
 				if err != nil {
 					Logger.Fatalln(err)
 				}
@@ -145,13 +114,16 @@ func (a *photo) PostHandler() http.Handler {
 			if err = stream.Send(&proto.UploadPhotoRequest{
 				AccessToken: at.Value,
 				LoginToken:  lt.Value,
-				Photo:       []byte(base64.StdEncoding.EncodeToString(efile)),
+				Photo:       value.File,
 				Thumbnail:   thumbnail.Bytes(),
 				Extension:   value.Extension,
 				Size:        value.Size,
 			}); err != nil {
 				Logger.ClientError()
 			}
+		}
+		if err := stream.CloseSend(); err != nil {
+			Logger.Fatalln(err)
 		}
 		resp := new(photomodel.POSTResponsePhotoModel)
 		resp.Service.Ok = true

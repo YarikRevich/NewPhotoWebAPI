@@ -63,8 +63,8 @@ func GetHandler() *mux.Router {
 
 	router.HandleFunc(PhotosDetailedPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := detailedphoto.NewDetailedPhotoHandler()
-		pagehandler.GetHandler().ServeHTTP(w, r)
-	}).Methods("GET")
+		pagehandler.PostHandler().ServeHTTP(w, r)
+	}).Methods("POST")
 
 	router.HandleFunc(PhotosPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := photo.NewPhotoPageHandler()

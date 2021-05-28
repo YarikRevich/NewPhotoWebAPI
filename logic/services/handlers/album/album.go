@@ -3,10 +3,8 @@ package handlers
 import (
 	"NewPhotoWeb/logic/proto"
 	albummodel "NewPhotoWeb/logic/services/models/album"
-	errormodel "NewPhotoWeb/logic/services/models/error"
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"image"
@@ -31,23 +29,8 @@ type album struct{}
 func (a *album) GetHandler() http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 
 		grpcResp, err := NPC.GetAlbums(
 			context.Background(),
@@ -69,12 +52,12 @@ func (a *album) GetHandler() http.Handler {
 			}
 			resp.Result = append(resp.Result, struct {
 				Name                 string `json:"name"`
-				LatestPhoto          string `json:"latestphoto"`
-				LatestPhotoThumbnail string `json:"latestphotothumbnail"`
+				LatestPhoto          []byte `json:"latestphoto"`
+				LatestPhotoThumbnail []byte `json:"latestphotothumbnail"`
 			}{
 				Name:                 grpcStreamResp.GetName(),
-				LatestPhoto:          string(grpcStreamResp.GetLatestPhoto()),
-				LatestPhotoThumbnail: string(grpcStreamResp.GetLatestPhotoThumbnail()),
+				LatestPhoto:          grpcStreamResp.GetLatestPhoto(),
+				LatestPhotoThumbnail: grpcStreamResp.GetLatestPhotoThumbnail(),
 			})
 		}
 
@@ -93,22 +76,8 @@ func (a *album) PostHandler() http.Handler {
 			Logger.Fatalln(err)
 		}
 
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 
 		resp := new(albummodel.POSTResponseAlbumModel)
 
@@ -143,22 +112,8 @@ func (a *album) DeleteHandler() http.Handler {
 			Logger.Fatalln("Album name was not passed")
 		}
 
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 
 		resp := new(albummodel.DELETEResponseAlbumModel)
 
@@ -193,22 +148,8 @@ func (a *album) PutHandler() http.Handler {
 			Logger.Fatalln(err)
 		}
 
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 
 		grpcResp, err := NPC.UploadPhotoToAlbum(context.Background())
 		if err != nil {
@@ -218,20 +159,16 @@ func (a *album) PutHandler() http.Handler {
 		resp := new(albummodel.PUTResponseAlbumModel)
 
 		for _, value := range req.Result.Data {
-			efile, err := base64.StdEncoding.DecodeString(value.File)
-			if err != nil {
-				Logger.Fatalln(err)
-			}
 
 			var img image.Image
 
 			if value.Extension == "png" {
-				img, err = png.Decode(bytes.NewReader(efile))
+				img, err = png.Decode(bytes.NewReader(value.File))
 				if err != nil {
 					Logger.Fatalln(err)
 				}
 			} else {
-				img, err = jpeg.Decode(bytes.NewReader(efile))
+				img, err = jpeg.Decode(bytes.NewReader(value.File))
 				if err != nil {
 					Logger.Fatalln(err)
 				}
@@ -251,7 +188,7 @@ func (a *album) PutHandler() http.Handler {
 				&proto.UploadPhotoToAlbumRequest{
 					AccessToken: at.Value,
 					LoginToken:  lt.Value,
-					Photo:       efile,
+					Photo:       value.File,
 					Thumbnail:   thumbnail.Bytes(),
 					Extension:   value.Extension,
 					Size:        value.Size,

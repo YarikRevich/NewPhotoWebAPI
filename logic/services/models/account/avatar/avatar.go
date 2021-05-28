@@ -2,7 +2,7 @@ package models
 
 type GETResponseAvatarModel struct {
 	Result struct {
-		Avatar string `json:"avatar"`
+		Avatar []byte `json:"avatar"`
 	} `json:"result"`
 	Service struct {
 		Ok bool `json:"ok"`
@@ -12,7 +12,7 @@ type GETResponseAvatarModel struct {
 
 type POSTRequestAvatarModel struct {
 	Data struct {
-		Avatar string `json:"avatar"`
+		Avatar []byte `json:"avatar"`
 	} `json:"data"`
 }
 

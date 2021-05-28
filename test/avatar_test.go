@@ -108,7 +108,7 @@ func TestAccountAvatarHandler(t *testing.T) {
 	b.Describe("Sets avatar", func() {
 		b.It("Should do that correctly", func() {
 			r := accountavatarmodel.POSTRequestAvatarModel{}
-			r.Data.Avatar = y
+			r.Data.Avatar = []byte(y)
 			by, err := json.Marshal(r)
 			if err != nil {
 				b.Fail(err)

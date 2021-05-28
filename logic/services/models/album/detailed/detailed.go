@@ -4,12 +4,12 @@ type GETResponseEqualAlbumModel struct {
 	Result struct {
 		Name   string `json:"name"`
 		Photos []struct {
-			Photo     string `json:"photo"`
-			Thumbnail string `json:"thumbnail"`
+			Photo     []byte `json:"photo"`
+			Thumbnail []byte `json:"thumbnail"`
 			Extension string `json:"extension"`
 		} `json:"photos"`
 		Videos []struct {
-			Video     string `json:"video"`
+			Video     []byte `json:"video"`
 			Extension string `json:"extension"`
 		} `json:"videos"`
 	} `json:"result"`
@@ -30,13 +30,13 @@ type PUTRequestEqualAlbumModel struct {
 	Data struct {
 		Name   string
 		Photos []struct {
-			File      string  `json:"file"`
+			File      []byte  `json:"file"`
 			Name      string  `json:"name"`
 			Size      float64 `json:"size"`
 			Extension string  `json:"extension"`
 		} `json:"photos"`
 		Videos []struct {
-			File      string  `json:"file"`
+			File      []byte  `json:"file"`
 			Name      string  `json:"name"`
 			Size      float64 `json:"size"`
 			Extension string  `json:"extension"`
@@ -54,8 +54,8 @@ type PUTResponseEqualAlbumModel struct {
 type DELETERequestEqualAlbumModel struct {
 	Data struct {
 		Name      string  `json:"name"`
-		Photos []string `json:"photos"`
-		Videos []string `json:"videos"`
+		Photos [][]byte `json:"photos"`
+		Videos [][]byte `json:"videos"`
 	} `json:"data"`
 }
 

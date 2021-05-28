@@ -2,7 +2,7 @@ package models
 
 type POSTRequestVideoModel struct {
 	Data []struct {
-		File      string  `json:"file"`
+		File      []byte  `json:"file"`
 		Name      string  `json:"name"`
 		Size      float64 `json:"size"`
 		Extension string  `json:"extension"`

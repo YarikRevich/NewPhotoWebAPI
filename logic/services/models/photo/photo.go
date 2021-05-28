@@ -2,8 +2,7 @@ package models
 
 type GETResponsePhotoModel struct {
 	Result []struct {
-		Photo     string   `json:"photo"`
-		Thumbnail string   `json:"thumbnail"`
+		Thumbnail []byte   `json:"thumbnail"`
 		Tags      []string `json:"tags"`
 	} `json:"result"`
 	Service struct {
@@ -14,7 +13,7 @@ type GETResponsePhotoModel struct {
 
 type POSTRequestPhotoModel struct {
 	Data []struct {
-		File      string  `json:"file"`
+		File      []byte  `json:"file"`
 		Name      string  `json:"name"`
 		Size      float64 `json:"size"`
 		Extension string  `json:"extension"`

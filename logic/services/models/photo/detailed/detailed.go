@@ -2,13 +2,13 @@ package detailed
 
 type GETRequestDetailedPhotoModel struct {
 	Data struct {
-		Photo string `json:"photo"`
+		Thumbnail []byte `json:"thumbnail"`
 	} `json:"data"`
 }
 
 type GETResponseDetailedPhotoModel struct {
 	Result struct {
-		Photo string `json:"photo"`
+		Photo []byte `json:"photo"`
 	} `json:"result"`
 	Service struct {
 		Ok      bool   `json:"ok"`
