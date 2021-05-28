@@ -218,10 +218,12 @@ func (a *detailedalbum) PutHandler() http.Handler {
 
 		grpcRespPhotos, err := streamImage.CloseAndRecv()
 		if err != nil {
+			Logger.Infoln("HERE")
 			Logger.Fatalln(err)
 		}
 		grpcRespVideos, err := streamVideo.CloseAndRecv()
 		if err != nil {
+			Logger.Infoln("HERE VIDEO")
 			Logger.Fatalln(err)
 		}
 		var resp detailedalbummodel.PUTResponseEqualAlbumModel

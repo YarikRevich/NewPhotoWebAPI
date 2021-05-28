@@ -31,13 +31,11 @@ type PUTRequestEqualAlbumModel struct {
 		Name   string
 		Photos []struct {
 			File      []byte  `json:"file"`
-			Name      string  `json:"name"`
 			Size      float64 `json:"size"`
 			Extension string  `json:"extension"`
 		} `json:"photos"`
 		Videos []struct {
 			File      []byte  `json:"file"`
-			Name      string  `json:"name"`
 			Size      float64 `json:"size"`
 			Extension string  `json:"extension"`
 		} `json:"videos"`

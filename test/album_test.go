@@ -15,6 +15,7 @@ import (
 
 	accountmodel "NewPhotoWeb/logic/services/models/account"
 	albummodel "NewPhotoWeb/logic/services/models/album"
+	detailedalbummodel "NewPhotoWeb/logic/services/models/album/detailed"
 	infodetailedalbummodel "NewPhotoWeb/logic/services/models/album/detailed/info"
 	signinmodel "NewPhotoWeb/logic/services/models/auth/sign_in"
 	signupmodel "NewPhotoWeb/logic/services/models/auth/sign_up"
@@ -41,6 +42,11 @@ func TestAlbumHandler(t *testing.T) {
 	}
 
 	i, err := os.ReadFile("test.png")
+	if err != nil {
+		b.Fail(err)
+	}
+
+	v, err := os.ReadFile("test.mp4")
 	if err != nil {
 		b.Fail(err)
 	}
@@ -150,6 +156,8 @@ func TestAlbumHandler(t *testing.T) {
 			if err := json.NewDecoder(rr.Body).Decode(&a); err != nil {
 				b.Fail(err)
 			}
+
+			b.Assert(a.Result[0].LatestPhoto).IsZero("Album latest photo is not zero")
 			b.Assert(a.Result[0].Name).Equal(y, "Album name is not correct")
 			b.Assert(a.Service.Ok).IsTrue("Album getting failed")
 		})
@@ -157,25 +165,34 @@ func TestAlbumHandler(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	b.Describe("Add photo to album", func() {
+	b.Describe("Add photo and video to album", func() {
 		b.It("Should do that correctly", func() {
-			r := albummodel.PUTRequestAlbumModel{}
-			r.Result.Name = y
-			r.Result.Data = append(r.Result.Data, struct {
-				File      []byte  "json:\"file\""
-				Size      float64 "json:\"size\""
-				Extension string  "json:\"extension\""
+			r := detailedalbummodel.PUTRequestEqualAlbumModel{}
+			r.Data.Name = y
+			r.Data.Photos = append(r.Data.Photos, struct {
+				File      []byte  `json:"file"`
+				Size      float64 `json:"size"`
+				Extension string  `json:"extension"`
 			}{
 				File:      i,
 				Size:      1,
 				Extension: "png",
+			})
+			r.Data.Videos = append(r.Data.Videos, struct {
+				File      []byte  `json:"file"`
+				Size      float64 `json:"size"`
+				Extension string  `json:"extension"`
+			}{
+				File:      v,
+				Size:      1,
+				Extension: "mp4",
 			})
 			by, err := json.Marshal(r)
 			if err != nil {
 				b.Fail(err)
 			}
 
-			rr, err := http.NewRequest("PUT", s.URL+router.AlbumsPath, bytes.NewReader(by))
+			rr, err := http.NewRequest("PUT", s.URL+router.AlbumsDetailedPath, bytes.NewReader(by))
 			if err != nil {
 				b.Fail(err)
 			}
@@ -185,7 +202,7 @@ func TestAlbumHandler(t *testing.T) {
 				b.Fail(err)
 			}
 
-			g := albummodel.PUTResponseAlbumModel{}
+			g := detailedalbummodel.PUTResponseEqualAlbumModel{}
 			if err := json.NewDecoder(rq.Body).Decode(&g); err != nil {
 				b.Fail(err)
 			}
@@ -194,16 +211,32 @@ func TestAlbumHandler(t *testing.T) {
 
 			time.Sleep(3 * time.Second)
 
-			l, err := c.Get(s.URL + router.AlbumsPath)
+			l, err := c.Get(s.URL + router.AlbumsDetailedPath + fmt.Sprintf("?name=%s", y))
 			if err != nil {
 				b.Fail(err)
 			}
-			a := albummodel.GETResponseAlbumModel{}
+			a := detailedalbummodel.GETResponseEqualAlbumModel{}
 			if err := json.NewDecoder(l.Body).Decode(&a); err != nil {
 				b.Fail(err)
 			}
-			b.Assert(a.Result[0].LatestPhoto).Equal(i, "Album latest photo is not correct")
+			b.Assert(a.Result.Photos[0].Photo).Equal(i, "Album photo is not correct")
+			b.Assert(a.Result.Photos[0].Extension).Equal("png", "Album photo extension is not correct")
+			b.Assert(a.Result.Videos[0].Video).Equal(v, "Album video is not correct")
+			b.Assert(a.Result.Videos[0].Extension).Equal("mp4", "Album photo extension is not correct")
+			b.Assert(a.Result.Name).Equal(y, "Album name is not correct")
 			b.Assert(a.Service.Ok).IsTrue("Album getting failed")
+
+			p, err := c.Get(s.URL + router.AlbumsPath)
+			if err != nil {
+				b.Fail(err)
+			}
+			u := albummodel.GETResponseAlbumModel{}
+			if err := json.NewDecoder(p.Body).Decode(&u); err != nil {
+				b.Fail(err)
+			}
+			b.Assert(u.Result[0].Name).Equal(y, "Album name is not correct")
+			b.Assert(u.Result[0].LatestPhoto).Equal(i, "Album latest photo is not correct")
+			b.Assert(u.Service.Ok).IsTrue("Album getting failed")
 		})
 	})
 
@@ -217,8 +250,39 @@ func TestAlbumHandler(t *testing.T) {
 			if err := json.NewDecoder(l.Body).Decode(&a); err != nil {
 				b.Fail(err)
 			}
-			b.Assert(a.Result.MediaNum).Equal(int64(1), "A num of media in the album is incorrect")
+			b.Assert(a.Result.MediaNum).Equal(int64(2), "A num of media in the album is incorrect")
 			b.Assert(a.Service.Ok).IsTrue("Album getting failed")
+		})
+	})
+
+	b.Describe("Delete photo and video", func() {
+		b.It("Should do that correctly", func() {
+			k := detailedalbummodel.DELETERequestEqualAlbumModel{}
+			k.Data.Name = y
+			k.Data.Photos = append(k.Data.Photos, i)
+			k.Data.Videos = append(k.Data.Videos, v)
+
+			by, err := json.Marshal(k)
+			if err != nil {
+				b.Fail(err)
+			}
+
+			r, err := http.NewRequest("DELETE", s.URL+router.AlbumsDetailedPath, bytes.NewReader(by))
+			if err != nil {
+				b.Fail(err)
+			}
+
+			t, err := c.Do(r)
+			if err != nil {
+				b.Fail(err)
+			}
+
+			o := detailedalbummodel.DELETEResponseEqualAlbumModel{}
+			if err := json.NewDecoder(t.Body).Decode(&o); err != nil {
+				b.Fail(err)
+			}
+	
+			b.Assert(o.Service.Ok).IsTrue("Photo and video deletion failed")
 		})
 	})
 

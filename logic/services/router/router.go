@@ -88,12 +88,10 @@ func GetHandler() *mux.Router {
 			pagehandler.GetHandler().ServeHTTP(w, r)
 		case "POST":
 			pagehandler.PostHandler().ServeHTTP(w, r)
-		case "PUT":
-			pagehandler.PutHandler().ServeHTTP(w, r)
 		case "DELETE":
 			pagehandler.DeleteHandler().ServeHTTP(w, r)
 		}
-	}).Methods("GET", "POST", "PUT", "DELETE")
+	}).Methods("GET", "POST", "DELETE")
 
 	router.HandleFunc(AlbumsDetailedPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := detailedalbum.NewDetailedAlbumPageHandler()
@@ -114,7 +112,7 @@ func GetHandler() *mux.Router {
 
 	router.HandleFunc(AccountPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := account.NewAccountPageHandler()
-		switch r.Method{
+		switch r.Method {
 		case "GET":
 			pagehandler.GetHandler().ServeHTTP(w, r)
 		case "DELETE":
