@@ -26,6 +26,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				}
 				return
 			}
+
 			lt, err := r.Cookie("lt")
 			if err != nil {
 				if err := json.NewEncoder(w).Encode(errResp); err != nil {
@@ -39,11 +40,11 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				Logger.ClientError()
 			}
 			if grpcResp.GetOk() {
-				r.AddCookie(&http.Cookie{Name: "at", Value: "itworks"})
-				// http.SetCookie(w, &http.Cookie{Name: "at", Value: lt.Value, Path: "/", MaxAge: -1})
-				// http.SetCookie(w, &http.Cookie{Name: "lt", Value: lt.Value, Path: "/", MaxAge: -1})
-				// http.SetCookie(w, &http.Cookie{Name: "at", Value: grpcResp.AccessToken, Path: "/"})
-				// http.SetCookie(w, &http.Cookie{Name: "lt", Value: grpcResp.LoginToken, Path: "/"})
+				delete(r.Header, "Cookie")
+				r.AddCookie(&http.Cookie{Name: "at", Value: grpcResp.AccessToken, Path: "/"})
+				r.AddCookie(&http.Cookie{Name: "lt", Value: grpcResp.LoginToken, Path: "/"})
+				http.SetCookie(w, &http.Cookie{Name: "at", Value: grpcResp.AccessToken, Path: "/"})
+				http.SetCookie(w, &http.Cookie{Name: "lt", Value: grpcResp.LoginToken, Path: "/"})
 				next.ServeHTTP(w, r)
 			} else {
 				resp := new(errormodel.ERRORAuthModel)

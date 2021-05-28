@@ -58,6 +58,8 @@ service NewPhotos {
     rpc UploadVideo(stream UploadVideoRequest) returns (UploadVideoResponse);
 
     //#####################    Account funcs   
+
+    rpc DeleteAccount(DeleteAccountRequest)returns (DeleteAccountResponse);
     
     rpc  GetUserinfo(GetUserinfoRequest) returns (GetUserinfoResponse);
 
@@ -146,6 +148,15 @@ message UploadVideoResponse {
 }
 
 //#####################    Account funcs' messages   
+
+message DeleteAccountRequest {
+    string access_token = 1;
+    string login_token = 2;
+}
+
+message DeleteAccountResponse {
+    bool ok = 1;
+}
 
 message GetUserinfoRequest {
     string access_token = 1;

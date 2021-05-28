@@ -8,13 +8,13 @@ import (
 
 	"NewPhotoWeb/logic/proto"
 	accountmodel "NewPhotoWeb/logic/services/models/account"
-	errormodel "NewPhotoWeb/logic/services/models/error"
 
 	. "NewPhotoWeb/config"
 )
 
 type IAccountPage interface {
 	GetHandler() http.Handler
+	DeleteHandler() http.Handler
 }
 
 type account struct{}
@@ -23,22 +23,8 @@ func (a *account) GetHandler() http.Handler {
 	//Get handler for account page  ...
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 
 		grpcResp, err := NPC.GetUserinfo(
 			context.Background(),
@@ -53,10 +39,41 @@ func (a *account) GetHandler() http.Handler {
 
 		resp := new(accountmodel.GETResponseAccountModel)
 
-		resp.Result.Firstname = grpcResp.GetFirstname()
-		resp.Result.Secondname = grpcResp.GetSecondname()
-		resp.Result.Storage = math.Round((grpcResp.GetStorage()*math.Pow(10, -9))*100) / 100
-		resp.Service.Ok = true
+		if grpcResp.GetOk() {
+			resp.Result.Firstname = grpcResp.GetFirstname()
+			resp.Result.Secondname = grpcResp.GetSecondname()
+			resp.Result.Storage = math.Round((grpcResp.GetStorage()*math.Pow(10, -9))*100) / 100
+			resp.Service.Ok = true
+		}
+
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			Logger.Fatalln(err)
+		}
+	})
+}
+
+func (a *account) DeleteHandler() http.Handler {
+	//Get handler for account page  ...
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
+
+		grpcResp, err := NPC.DeleteAccount(
+			context.Background(),
+			&proto.DeleteAccountRequest{
+				AccessToken: at.Value,
+				LoginToken:  lt.Value,
+			},
+		)
+		if err != nil {
+			Logger.ClientError()
+		}
+
+		resp := new(accountmodel.DELETEResponseAccountModel)
+		if grpcResp.GetOk() {
+			resp.Service.Ok = true
+		}
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			Logger.Fatalln(err)

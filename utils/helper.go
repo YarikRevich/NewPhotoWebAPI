@@ -73,22 +73,3 @@ func GetCleanTags(dirty string) []string {
 	}
 	return response
 }
-
-func IsVideo(extension string) bool {
-	a := []string{
-		"mp4",
-		"mov",
-		"heic",
-		"webm",
-		"mkv",
-		"gif",
-		"avi",
-		"mp4v",
-	}
-	for _, v := range a {
-		if extension == v {
-			return true
-		}
-	}
-	return false
-}

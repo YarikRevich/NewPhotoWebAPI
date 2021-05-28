@@ -3,12 +3,10 @@ package avatar
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"NewPhotoWeb/logic/proto"
 	avatarmodel "NewPhotoWeb/logic/services/models/account/avatar"
-	errormodel "NewPhotoWeb/logic/services/models/error"
 
 	. "NewPhotoWeb/config"
 )
@@ -22,24 +20,8 @@ type avatar struct{}
 
 func (a *avatar) GetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.Cookies())
-		fmt.Println(r.Cookie("at"))
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 		grpcResp, err := NPC.GetUserAvatar(
 			context.Background(),
 			&proto.GetUserAvatarRequest{
@@ -64,22 +46,8 @@ func (a *avatar) GetHandler() http.Handler {
 
 func (a *avatar) PostHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
-			}
-			return
-		}
+		at, _ := r.Cookie("at")
+		lt, _ := r.Cookie("lt")
 
 		var req avatarmodel.POSTRequestAvatarModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

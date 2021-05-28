@@ -5,7 +5,7 @@ stub:
 
 proto:
 	export PATH=$$PATH:$$GOPATH/bin;\
-	protoc -I $$GOPATH/src/NewPhotoWebAPI  --go_out=. --go-grpc_out=. logic/proto/api.proto
+	protoc -I $$GOPATH/src/NewPhotoWebAPI  --go_out=$$GOPATH/src/NewPhotoWebAPI  --go-grpc_out=$$GOPATH/src/NewPhotoWebAPI  $$GOPATH/src/NewPhotoWebAPI/logic/proto/api.proto
 
 build: proto
 	go build main.go

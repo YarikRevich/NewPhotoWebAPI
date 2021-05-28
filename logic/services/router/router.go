@@ -114,8 +114,13 @@ func GetHandler() *mux.Router {
 
 	router.HandleFunc(AccountPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := account.NewAccountPageHandler()
-		pagehandler.GetHandler().ServeHTTP(w, r)
-	}).Methods("GET")
+		switch r.Method{
+		case "GET":
+			pagehandler.GetHandler().ServeHTTP(w, r)
+		case "DELETE":
+			pagehandler.DeleteHandler().ServeHTTP(w, r)
+		}
+	}).Methods("GET", "DELETE")
 
 	router.HandleFunc(AccountAvatarPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := avatar.NewAvatarHandler()

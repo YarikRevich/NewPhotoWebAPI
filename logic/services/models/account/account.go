@@ -11,3 +11,10 @@ type GETResponseAccountModel struct {
 		Message string `json:"message"`
 	} `json:"service"`
 }
+
+type DELETEResponseAccountModel struct {
+	Service struct {
+		Ok      bool   `json:"ok"`
+		Message string `json:"message"`
+	} `json:"service"`
+}
