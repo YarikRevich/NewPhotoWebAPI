@@ -8,7 +8,9 @@ import (
 	"NewPhotoWeb/logic/proto"
 	detailedphotomodel "NewPhotoWeb/logic/services/models/photo/detailed"
 
-	. "NewPhotoWeb/config"
+
+	"NewPhotoWeb/log"
+	"NewPhotoWeb/logic/client"
 )
 
 type IDetailedPhoto interface {
@@ -21,13 +23,13 @@ func (a *detailedphoto) PostHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req detailedphotomodel.GETRequestDetailedPhotoModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 
 		at, _ := r.Cookie("at")
 		lt, _ := r.Cookie("lt")
 
-		grpcResp, err := NPC.GetFullPhotoByThumbnail(
+		grpcResp, err := client.NewPhotoClient.GetFullPhotoByThumbnail(
 			context.Background(),
 			&proto.GetFullPhotoByThumbnailRequest{
 				AccessToken: at.Value,
@@ -36,7 +38,7 @@ func (a *detailedphoto) PostHandler() http.Handler {
 			},
 		)
 		if err != nil {
-			Logger.Fatalln(err)
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		resp := new(detailedphotomodel.GETResponseDetailedPhotoModel)
@@ -44,7 +46,7 @@ func (a *detailedphoto) PostHandler() http.Handler {
 		resp.Result.Photo = grpcResp.GetPhoto()
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 

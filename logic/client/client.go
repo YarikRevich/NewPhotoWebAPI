@@ -1,20 +1,26 @@
 package client
 
 import (
+	"NewPhotoWeb/log"
 	"NewPhotoWeb/logic/proto"
+	"context"
 	"fmt"
-	"google.golang.org/grpc"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"google.golang.org/grpc"
 )
 
 var (
-	conn = NewConnection()
+	NewPhotoClient, NewPhotoAuthClient = New()
 )
 
-func NewConnection() *grpc.ClientConn {
+type Client struct {
+	conn *grpc.ClientConn
+}
+
+func (c *Client) NewConnection() {
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
 		grpc.WithDefaultCallOptions(
@@ -25,12 +31,12 @@ func NewConnection() *grpc.ClientConn {
 
 	serverAddr, ok := os.LookupEnv("serverAddr")
 	if !ok {
-		log.Fatalln("serverAddr is not written in credentials.sh file")
+		log.Logger.Fatalln("serverAddr is not written in credentials.sh file")
 	}
 
 	conn, err := grpc.Dial(serverAddr, opts...)
 	if err != nil {
-		log.Fatalln(err.Error())
+		log.Logger.Fatalln(err.Error())
 	}
 	go func() {
 		signs := make(chan os.Signal, 1)
@@ -43,12 +49,29 @@ func NewConnection() *grpc.ClientConn {
 		}
 		os.Exit(0)
 	}()
-	return conn
+	c.conn = conn
 }
 
-func NewPhotoClient() proto.NewPhotosClient {
-	return proto.NewNewPhotosClient(conn)
+func (c Client) GetNewPhotoClient() proto.NewPhotosClient {
+	return proto.NewNewPhotosClient(c.conn)
 }
-func NewAuthClient() proto.AuthenticationClient {
-	return proto.NewAuthenticationClient(conn)
+
+func (c Client) GetNewPhotoAuthClient() proto.AuthenticationClient {
+	return proto.NewAuthenticationClient(c.conn)
+}
+
+func New() (proto.NewPhotosClient, proto.AuthenticationClient) {
+	l := new(Client)
+	l.NewConnection()
+	return l.GetNewPhotoClient(), l.GetNewPhotoAuthClient()
+}
+
+func Restart() {
+	for {
+		NewPhotoClient, NewPhotoAuthClient = New()
+		if r, err := NewPhotoClient.Ping(context.Background(), &proto.PingRequest{}); err == nil && r.GetPong() {
+			break
+		}
+		log.Logger.ClientError()
+	}
 }

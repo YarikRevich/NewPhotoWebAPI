@@ -8,7 +8,9 @@ import (
 
 	"net/http"
 
-	. "NewPhotoWeb/config"
+
+	"NewPhotoWeb/log"
+	"NewPhotoWeb/logic/client"
 )
 
 type ISignUpPage interface {
@@ -23,12 +25,12 @@ func (a *signup) PostHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req signupmodel.POSTRequestRegestrationModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 
 		resp := new(signupmodel.POSTResponseRegestrationModel)
 
-		grpcResp, err := AC.RegisterUser(
+		grpcResp, err := client.NewPhotoAuthClient.RegisterUser(
 			context.Background(),
 			&proto.UserRegisterRequest{
 				Login:      req.Data.Login,
@@ -37,13 +39,13 @@ func (a *signup) PostHandler() http.Handler {
 				Secondname: req.Data.Secondname,
 			})
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		resp.Service.Ok = grpcResp.GetOk()
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 }

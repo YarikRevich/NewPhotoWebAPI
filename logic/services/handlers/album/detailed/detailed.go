@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	. "NewPhotoWeb/config"
+
+	"NewPhotoWeb/log"
+	"NewPhotoWeb/logic/client"
 	"NewPhotoWeb/logic/proto"
 	detailedalbummodel "NewPhotoWeb/logic/services/models/album/detailed"
 )
@@ -22,7 +24,7 @@ func (a *detailedalbum) GetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values, ok := r.URL.Query()["name"]
 		if !ok {
-			Logger.Fatalln("Album name is empty!")
+			log.Logger.Fatalln("Album name is empty!")
 		}
 
 		at, _ := r.Cookie("at")
@@ -30,7 +32,7 @@ func (a *detailedalbum) GetHandler() http.Handler {
 
 		resp := new(detailedalbummodel.GETResponseEqualAlbumModel)
 
-		grpcStreamPhotosResp, err := NPC.GetPhotosFromAlbum(
+		grpcStreamPhotosResp, err := client.NewPhotoClient.GetPhotosFromAlbum(
 			context.Background(),
 			&proto.GetPhotosFromAlbumRequest{
 				AccessToken: at.Value,
@@ -39,7 +41,7 @@ func (a *detailedalbum) GetHandler() http.Handler {
 			},
 		)
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		for {
@@ -58,10 +60,10 @@ func (a *detailedalbum) GetHandler() http.Handler {
 			})
 		}
 		if err = grpcStreamPhotosResp.CloseSend(); err != nil {
-			Logger.Fatalln(err.Error())
+			log.Logger.ClientError(); client.Restart()
 		}
 
-		grpcStreamVideosResp, err := NPC.GetVideosFromAlbum(
+		grpcStreamVideosResp, err := client.NewPhotoClient.GetVideosFromAlbum(
 			context.Background(),
 			&proto.GetVideosFromAlbumRequest{
 				AccessToken: at.Value,
@@ -70,7 +72,7 @@ func (a *detailedalbum) GetHandler() http.Handler {
 			},
 		)
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		for {
@@ -88,14 +90,14 @@ func (a *detailedalbum) GetHandler() http.Handler {
 			})
 		}
 		if err = grpcStreamVideosResp.CloseSend(); err != nil {
-			Logger.Fatalln(err.Error())
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		resp.Result.Name = values[0]
 		resp.Service.Ok = true
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 }
@@ -107,17 +109,17 @@ func (a *detailedalbum) DeleteHandler() http.Handler {
 
 		var req detailedalbummodel.DELETERequestEqualAlbumModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 
-		grpcRespPhotoStream, err := NPC.DeletePhotoFromAlbum(context.Background())
+		grpcRespPhotoStream, err := client.NewPhotoClient.DeletePhotoFromAlbum(context.Background())
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
-		grpcRespVideoStream, err := NPC.DeleteVideoFromAlbum(context.Background())
+		grpcRespVideoStream, err := client.NewPhotoClient.DeleteVideoFromAlbum(context.Background())
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		for _, v := range req.Data.Photos {
@@ -129,7 +131,7 @@ func (a *detailedalbum) DeleteHandler() http.Handler {
 					Album:       req.Data.Name,
 				},
 			); err != nil {
-				Logger.Fatalln(err)
+				log.Logger.ClientError(); client.Restart()
 			}
 		}
 
@@ -142,18 +144,18 @@ func (a *detailedalbum) DeleteHandler() http.Handler {
 					Album:       req.Data.Name,
 				},
 			); err != nil {
-				Logger.Fatalln(err)
+				log.Logger.ClientError(); client.Restart()
 			}
 		}
 
 		grpcRespPhoto, err := grpcRespPhotoStream.CloseAndRecv()
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		grpcRespVideo, err := grpcRespVideoStream.CloseAndRecv()
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		var resp detailedalbummodel.DELETEResponseEqualAlbumModel
@@ -161,7 +163,7 @@ func (a *detailedalbum) DeleteHandler() http.Handler {
 			resp.Service.Ok = true
 		}
 		if err := json.NewEncoder(w).Encode(&resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 }
@@ -173,17 +175,17 @@ func (a *detailedalbum) PutHandler() http.Handler {
 
 		var req detailedalbummodel.PUTRequestEqualAlbumModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 
-		streamImage, err := NPC.UploadPhotoToAlbum(context.Background())
+		streamImage, err := client.NewPhotoClient.UploadPhotoToAlbum(context.Background())
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
-		streamVideo, err := NPC.UploadVideoToAlbum(context.Background())
+		streamVideo, err := client.NewPhotoClient.UploadVideoToAlbum(context.Background())
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		for _, v := range req.Data.Photos {
@@ -197,7 +199,7 @@ func (a *detailedalbum) PutHandler() http.Handler {
 					Album:       req.Data.Name,
 				},
 			); err != nil {
-				Logger.Fatalln(err.Error())
+				log.Logger.ClientError(); client.Restart()
 			}
 		}
 
@@ -212,19 +214,17 @@ func (a *detailedalbum) PutHandler() http.Handler {
 					Album:       req.Data.Name,
 				},
 			); err != nil {
-				Logger.Fatalln(err.Error())
+				log.Logger.ClientError(); client.Restart()
 			}
 		}
 
 		grpcRespPhotos, err := streamImage.CloseAndRecv()
 		if err != nil {
-			Logger.Infoln("HERE")
-			Logger.Fatalln(err)
+			log.Logger.ClientError(); client.Restart()
 		}
 		grpcRespVideos, err := streamVideo.CloseAndRecv()
 		if err != nil {
-			Logger.Infoln("HERE VIDEO")
-			Logger.Fatalln(err)
+			log.Logger.ClientError(); client.Restart()
 		}
 		var resp detailedalbummodel.PUTResponseEqualAlbumModel
 		if grpcRespPhotos.GetOk() && grpcRespVideos.GetOk() {
@@ -232,7 +232,7 @@ func (a *detailedalbum) PutHandler() http.Handler {
 		}
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 }

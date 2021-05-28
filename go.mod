@@ -3,6 +3,8 @@ module NewPhotoWeb
 go 1.15
 
 require (
+	github.com/Kenshin/cprint v0.0.0-20140603071510-5d2b3710156e // indirect
+	github.com/daviddengcn/go-colortext v1.0.0 // indirect
 	github.com/franela/goblin v0.0.0-20210519012713-85d372ac71e2 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/securecookie v1.1.1

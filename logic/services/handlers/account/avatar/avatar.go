@@ -8,7 +8,9 @@ import (
 	"NewPhotoWeb/logic/proto"
 	avatarmodel "NewPhotoWeb/logic/services/models/account/avatar"
 
-	. "NewPhotoWeb/config"
+
+	"NewPhotoWeb/log"
+	"NewPhotoWeb/logic/client"
 )
 
 type IAccountAvatarPage interface {
@@ -22,8 +24,8 @@ func (a *avatar) GetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		at, _ := r.Cookie("at")
 		lt, _ := r.Cookie("lt")
-		
-		grpcResp, err := NPC.GetUserAvatar(
+
+		grpcResp, err := client.NewPhotoClient.GetUserAvatar(
 			context.Background(),
 			&proto.GetUserAvatarRequest{
 				AccessToken: at.Value,
@@ -31,7 +33,7 @@ func (a *avatar) GetHandler() http.Handler {
 			},
 		)
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		var resp avatarmodel.GETResponseAvatarModel
@@ -40,7 +42,7 @@ func (a *avatar) GetHandler() http.Handler {
 			resp.Service.Ok = true
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 }
@@ -52,10 +54,10 @@ func (a *avatar) PostHandler() http.Handler {
 
 		var req avatarmodel.POSTRequestAvatarModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 
-		grpcResp, err := NPC.SetUserAvatar(
+		grpcResp, err := client.NewPhotoClient.SetUserAvatar(
 			context.Background(),
 			&proto.SetUserAvatarRequest{
 				AccessToken: at.Value,
@@ -64,7 +66,7 @@ func (a *avatar) PostHandler() http.Handler {
 			},
 		)
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		resp := new(avatarmodel.POSTResponseAvatarModel)
@@ -73,7 +75,7 @@ func (a *avatar) PostHandler() http.Handler {
 		}
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 }

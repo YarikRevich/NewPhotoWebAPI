@@ -4,8 +4,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mbndr/figlet4go"
+	"github.com/Kenshin/cprint"
 	"github.com/sirupsen/logrus"
+)
+
+var (
+	Logger = New()
 )
 
 const (
@@ -13,26 +17,15 @@ const (
 	TestPath = "../log/error.log"
 )
 
-type Logger struct {
+type Log struct {
 	*logrus.Logger
 }
 
-func (l *Logger) ClientError() {
-	render := figlet4go.NewAsciiRender()
-
-	options := figlet4go.NewRenderOptions()
-	options.FontColor = []figlet4go.Color{
-		figlet4go.ColorRed,
-	}
-
-	str, err := render.RenderOpts("Server error", options)
-	if err != nil {
-		l.Errorln(err)
-	}
-	l.Fatalln(str)
+func (l *Log) ClientError() {
+	cprint.P(cprint.ERROR, "Client does not respond, try to restart ...")
 }
 
-func (l *Logger) OpenLogFile() *os.File {
+func (l *Log) OpenLogFile() *os.File {
 	path := ProdPath
 	if f, err := os.Executable(); err == nil && strings.Contains(f, "test") {
 		path = TestPath
@@ -49,8 +42,8 @@ func (l *Logger) OpenLogFile() *os.File {
 	return f
 }
 
-func New() *Logger {
-	log := new(Logger)
+func New() *Log {
+	log := new(Log)
 	log.Logger = logrus.New()
 	log.Logger.SetOutput(log.OpenLogFile())
 	log.Logger.SetLevel(logrus.FatalLevel)

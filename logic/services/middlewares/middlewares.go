@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	. "NewPhotoWeb/config"
+	"NewPhotoWeb/log"
+	"NewPhotoWeb/logic/client"
 	"NewPhotoWeb/logic/proto"
 	errormodel "NewPhotoWeb/logic/services/models/error"
 	"NewPhotoWeb/utils"
@@ -22,7 +23,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			at, err := r.Cookie("at")
 			if err != nil {
 				if err := json.NewEncoder(w).Encode(errResp); err != nil {
-					Logger.Fatalln(err)
+					log.Logger.Fatalln(err)
 				}
 				return
 			}
@@ -30,14 +31,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			lt, err := r.Cookie("lt")
 			if err != nil {
 				if err := json.NewEncoder(w).Encode(errResp); err != nil {
-					Logger.Fatalln(err)
+					log.Logger.Fatalln(err)
 				}
 				return
 			}
 
-			grpcResp, err := AC.RetrieveToken(context.Background(), &proto.RetrieveTokenRequest{AccessToken: at.Value, LoginToken: lt.Value})
+			grpcResp, err := client.NewPhotoAuthClient.RetrieveToken(context.Background(), &proto.RetrieveTokenRequest{AccessToken: at.Value, LoginToken: lt.Value})
 			if err != nil {
-				Logger.ClientError()
+				log.Logger.Fatalln(err)
 			}
 			if grpcResp.GetOk() {
 				delete(r.Header, "Cookie")
@@ -50,7 +51,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				resp := new(errormodel.ERRORAuthModel)
 				resp.Service.Error = errormodel.NOT_THIS_TIME_ERROR
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
-					Logger.Fatalln(err)
+					log.Logger.Fatalln(err)
 				}
 			}
 		}

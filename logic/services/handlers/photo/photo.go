@@ -15,7 +15,9 @@ import (
 	photomodel "NewPhotoWeb/logic/services/models/photo"
 	"NewPhotoWeb/utils"
 
-	. "NewPhotoWeb/config"
+
+	"NewPhotoWeb/log"
+	"NewPhotoWeb/logic/client"
 )
 
 type IPhotoPage interface {
@@ -32,7 +34,7 @@ func (a *photo) GetHandler() http.Handler {
 		at, _ := r.Cookie("at")
 		lt, _ := r.Cookie("lt")
 
-		grpcResp, err := NPC.GetPhotos(
+		grpcResp, err := client.NewPhotoClient.GetPhotos(
 			context.Background(),
 			&proto.GetPhotosRequest{
 				AccessToken: at.Value,
@@ -40,7 +42,7 @@ func (a *photo) GetHandler() http.Handler {
 			},
 		)
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 		resp := new(photomodel.GETResponsePhotoModel)
 
@@ -60,12 +62,12 @@ func (a *photo) GetHandler() http.Handler {
 		}
 
 		if err := grpcResp.CloseSend(); err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 		resp.Service.Ok = true
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 }
@@ -79,12 +81,12 @@ func (a *photo) PostHandler() http.Handler {
 
 		var req photomodel.POSTRequestPhotoModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 
-		stream, err := NPC.UploadPhoto(context.Background())
+		stream, err := client.NewPhotoClient.UploadPhoto(context.Background())
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 		for _, value := range req.Data {
 			var img image.Image
@@ -92,12 +94,12 @@ func (a *photo) PostHandler() http.Handler {
 			case "png":
 				img, err = png.Decode(bytes.NewReader(value.File))
 				if err != nil {
-					Logger.Fatalln(err)
+					log.Logger.Fatalln(err)
 				}
 			case "jpeg":
 				img, err = jpeg.Decode(bytes.NewReader(value.File))
 				if err != nil {
-					Logger.Fatalln(err)
+					log.Logger.Fatalln(err)
 				}
 			default:
 				continue
@@ -108,7 +110,7 @@ func (a *photo) PostHandler() http.Handler {
 			thumbnail := bytes.NewBuffer(buf.Bytes())
 
 			if err = jpeg.Encode(thumbnail, resized, nil); err != nil {
-				Logger.Fatalln(err)
+				log.Logger.Fatalln(err)
 			}
 
 			if err = stream.Send(&proto.UploadPhotoRequest{
@@ -119,16 +121,16 @@ func (a *photo) PostHandler() http.Handler {
 				Extension:   value.Extension,
 				Size:        value.Size,
 			}); err != nil {
-				Logger.ClientError()
+				log.Logger.ClientError(); client.Restart()
 			}
 		}
 		if err := stream.CloseSend(); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.ClientError(); client.Restart()
 		}
 		resp := new(photomodel.POSTResponsePhotoModel)
 		resp.Service.Ok = true
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 }

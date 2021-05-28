@@ -8,7 +8,8 @@ import (
 	"NewPhotoWeb/logic/proto"
 	signinmodel "NewPhotoWeb/logic/services/models/auth/sign_in"
 
-	. "NewPhotoWeb/config"
+	"NewPhotoWeb/log"
+	"NewPhotoWeb/logic/client"
 )
 
 type ISignInPage interface {
@@ -23,17 +24,18 @@ func (a *signin) PostHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req signinmodel.GETRequestSignInModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 
-		grpcResp, err := AC.LoginUser(
+		grpcResp, err := client.NewPhotoAuthClient.LoginUser(
 			context.Background(),
 			&proto.UserLoginRequest{
 				Login:    req.Data.Login,
 				Password: req.Data.Password,
 			})
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError()
+			client.Restart()
 		}
 
 		resp := new(signinmodel.GETResponseSignInModel)
@@ -44,7 +46,7 @@ func (a *signin) PostHandler() http.Handler {
 			resp.Service.Ok = true
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 

@@ -9,7 +9,8 @@ import (
 	"NewPhotoWeb/logic/proto"
 	accountmodel "NewPhotoWeb/logic/services/models/account"
 
-	. "NewPhotoWeb/config"
+	"NewPhotoWeb/log"
+	"NewPhotoWeb/logic/client"
 )
 
 type IAccountPage interface {
@@ -26,7 +27,7 @@ func (a *account) GetHandler() http.Handler {
 		at, _ := r.Cookie("at")
 		lt, _ := r.Cookie("lt")
 
-		grpcResp, err := NPC.GetUserinfo(
+		grpcResp, err := client.NewPhotoClient.GetUserinfo(
 			context.Background(),
 			&proto.GetUserinfoRequest{
 				AccessToken: at.Value,
@@ -34,7 +35,7 @@ func (a *account) GetHandler() http.Handler {
 			},
 		)
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		resp := new(accountmodel.GETResponseAccountModel)
@@ -47,7 +48,7 @@ func (a *account) GetHandler() http.Handler {
 		}
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 }
@@ -59,7 +60,7 @@ func (a *account) DeleteHandler() http.Handler {
 		at, _ := r.Cookie("at")
 		lt, _ := r.Cookie("lt")
 
-		grpcResp, err := NPC.DeleteAccount(
+		grpcResp, err := client.NewPhotoClient.DeleteAccount(
 			context.Background(),
 			&proto.DeleteAccountRequest{
 				AccessToken: at.Value,
@@ -67,7 +68,7 @@ func (a *account) DeleteHandler() http.Handler {
 			},
 		)
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 
 		resp := new(accountmodel.DELETEResponseAccountModel)
@@ -76,7 +77,7 @@ func (a *account) DeleteHandler() http.Handler {
 		}
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 }

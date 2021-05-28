@@ -4,7 +4,8 @@ import (
 	signoutmodel "NewPhotoWeb/logic/services/models/auth/sign_out"
 	"encoding/json"
 	"net/http"
-	. "NewPhotoWeb/config"
+
+	"NewPhotoWeb/log"
 )
 
 type ISignOutPage interface {
@@ -24,7 +25,7 @@ func (a *signout) GetHandler() http.Handler {
 		resp.Service.Ok = true
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil{
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 }

@@ -91,6 +91,8 @@ service NewPhotos {
 
     //#####################    Util funcs
 
+    rpc Ping(PingRequest)returns(PingResponse);
+
     rpc  GetFullPhotoByThumbnail(GetFullPhotoByThumbnailRequest) returns (GetFullPhotoByThumbnailResponse);
 }
 
@@ -312,6 +314,12 @@ message GetAlbumInfoResponse {
 }
 
 //#####################    Util funcs' messages
+
+message PingRequest{}
+
+message PingResponse{
+    bool pong = 1;
+}
 
 message GetFullPhotoByThumbnailRequest {
     string access_token = 1;

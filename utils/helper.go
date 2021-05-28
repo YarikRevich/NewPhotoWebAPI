@@ -1,7 +1,7 @@
 package utils
 
 import (
-	. "NewPhotoWeb/config"
+	"NewPhotoWeb/log"
 	"strconv"
 	"strings"
 )
@@ -51,13 +51,13 @@ func GetWishedSize(s string) (uint, uint) {
 	height, err := strconv.Atoi(splitxsymbol[0])
 
 	if err != nil {
-		Logger.Errorln(err.Error())
+		log.Logger.Errorln(err.Error())
 	}
 
 	width, err := strconv.Atoi(splitxsymbol[0])
 
 	if err != nil {
-		Logger.Errorln(err.Error())
+		log.Logger.Errorln(err.Error())
 	}
 
 	return uint(height), uint(width)
@@ -73,3 +73,5 @@ func GetCleanTags(dirty string) []string {
 	}
 	return response
 }
+
+

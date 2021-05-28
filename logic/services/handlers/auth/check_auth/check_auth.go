@@ -8,7 +8,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	. "NewPhotoWeb/config"
+
+	"NewPhotoWeb/log"
+	"NewPhotoWeb/logic/client"
 )
 
 type ICheckAuth interface {
@@ -24,21 +26,21 @@ func (a *checkauth) GetHandler() http.Handler {
 		at, err := r.Cookie("at")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
+				log.Logger.Fatalln(err)
 			}
 			return
 		}
 		lt, err := r.Cookie("lt")
 		if err != nil {
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				Logger.Fatalln(err)
+				log.Logger.Fatalln(err)
 			}
 			return
 		}
 
-		grpcResp, err := AC.RetrieveToken(context.Background(), &proto.RetrieveTokenRequest{AccessToken: at.Value, LoginToken: lt.Value})
+		grpcResp, err := client.NewPhotoAuthClient.RetrieveToken(context.Background(), &proto.RetrieveTokenRequest{AccessToken: at.Value, LoginToken: lt.Value})
 		if err != nil {
-			Logger.ClientError()
+			log.Logger.ClientError(); client.Restart()
 		}
 		resp := new(checkauthmodel.GETResponseCheckAuthModel)
 		if grpcResp.GetOk() {
@@ -47,7 +49,7 @@ func (a *checkauth) GetHandler() http.Handler {
 			resp.Service.Ok = true
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			Logger.Fatalln(err)
+			log.Logger.Fatalln(err)
 		}
 	})
 
