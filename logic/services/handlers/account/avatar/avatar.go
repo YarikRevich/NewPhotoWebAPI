@@ -22,6 +22,7 @@ func (a *avatar) GetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		at, _ := r.Cookie("at")
 		lt, _ := r.Cookie("lt")
+		
 		grpcResp, err := NPC.GetUserAvatar(
 			context.Background(),
 			&proto.GetUserAvatarRequest{

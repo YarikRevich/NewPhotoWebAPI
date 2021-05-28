@@ -130,7 +130,7 @@ func (a *album) DeleteHandler() http.Handler {
 		}
 
 		if grpcResp.GetOk() {
-			resp.Service.Message = fmt.Sprintf("Something went wrong deleting %s album", values[0])
+			resp.Service.Ok = true
 		}
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -142,7 +142,6 @@ func (a *album) DeleteHandler() http.Handler {
 func (a *album) PutHandler() http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		var req albummodel.PUTRequestAlbumModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			Logger.Fatalln(err)
