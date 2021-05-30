@@ -34,9 +34,9 @@ func (a *checkauth) GetHandler() http.Handler {
 
 		sourceType := r.Header["S-Type"]
 
-		grpcResp, err := client.NewPhotoAuthClient.RetrieveToken(
+		grpcResp, err := client.NewPhotoAuthClient.IsTokenCorrect(
 			context.Background(),
-			&proto.RetrieveTokenRequest{
+			&proto.IsTokenCorrectRequest{
 				AccessToken: at[0],
 				LoginToken:  lt[0],
 				SourceType:  sourceType[0],
@@ -49,8 +49,6 @@ func (a *checkauth) GetHandler() http.Handler {
 
 		resp := new(checkauthmodel.GETResponseCheckAuthModel)
 		if grpcResp.GetOk() {
-			w.Header().Add("X-At", grpcResp.GetAccessToken())
-			w.Header().Add("X-Lt", grpcResp.GetLoginToken())
 			resp.Service.Ok = true
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {

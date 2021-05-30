@@ -3,7 +3,6 @@ package middlewares
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -33,9 +32,9 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 			sourceType := r.Header["S-Type"]
 
-			grpcResp, err := client.NewPhotoAuthClient.RetrieveToken(
+			grpcResp, err := client.NewPhotoAuthClient.IsTokenCorrect(
 				context.Background(),
-				&proto.RetrieveTokenRequest{
+				&proto.IsTokenCorrectRequest{
 					AccessToken: at[0],
 					LoginToken:  lt[0],
 					SourceType:  sourceType[0],
@@ -46,14 +45,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				client.Restart()
 			}
 
-			fmt.Println(at[0], lt[0])
-			fmt.Println(grpcResp.GetOk())
-			fmt.Println(r.URL.Path)
 			if grpcResp.GetOk() {
-				r.Header.Set("X-At", grpcResp.GetAccessToken())
-				w.Header().Add("X-At", grpcResp.GetAccessToken())
-				r.Header.Set("X-Lt", grpcResp.GetLoginToken())
-				w.Header().Add("X-Lt", grpcResp.GetLoginToken())
 				next.ServeHTTP(w, r)
 			} else {
 				resp := new(errormodel.ERRORAuthModel)

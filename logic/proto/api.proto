@@ -8,7 +8,8 @@ option go_package = "logic/proto";
 service Authentication {
     rpc RegisterUser(UserRegisterRequest) returns (UserRegisterResponse);
     rpc LoginUser(UserLoginRequest) returns (UserLoginResponse);
-    rpc RetrieveToken(RetrieveTokenRequest) returns (RetrieveTokenResponse);
+    rpc IsTokenCorrect(IsTokenCorrectRequest) returns (IsTokenCorrectResponse);
+    // rpc RetrieveToken(RetrieveTokenRequest) returns (RetrieveTokenResponse);
 } 
 
 
@@ -36,10 +37,20 @@ message UserLoginResponse{
     bool ok = 3;
 }
 
+message IsTokenCorrectRequest{
+    string access_token = 1;
+    string login_token = 2;
+    string source_type = 3;
+}
+
+message IsTokenCorrectResponse{
+    bool ok = 1;
+}
+
 message RetrieveTokenRequest{
     string access_token = 1;
     string login_token = 2;
-    string source_type = 5;
+    string source_type = 3;
 }
 
 message RetrieveTokenResponse { 
@@ -118,6 +129,8 @@ service NewPhotos {
 message GetPhotosRequest {
     string access_token = 1;
     string login_token = 2;
+    int64 offset = 3;
+    int64 page = 4;
 }
 
 message GetPhotosResponse {
@@ -234,6 +247,8 @@ message GetPhotosFromAlbumRequest{
     string access_token = 1;
     string login_token = 2;
     string name = 3; 
+    int64 offset = 4;
+    int64 page = 5;
 }
 
 message GetPhotosFromAlbumResponse{
@@ -249,6 +264,8 @@ message GetVideosFromAlbumRequest{
     string access_token = 1;
     string login_token = 2;
     string name = 3; 
+    int64 offset = 4;
+    int64 page = 5;
 }
 
 message GetVideosFromAlbumResponse{

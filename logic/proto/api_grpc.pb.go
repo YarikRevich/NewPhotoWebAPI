@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 type AuthenticationClient interface {
 	RegisterUser(ctx context.Context, in *UserRegisterRequest, opts ...grpc.CallOption) (*UserRegisterResponse, error)
 	LoginUser(ctx context.Context, in *UserLoginRequest, opts ...grpc.CallOption) (*UserLoginResponse, error)
-	RetrieveToken(ctx context.Context, in *RetrieveTokenRequest, opts ...grpc.CallOption) (*RetrieveTokenResponse, error)
+	IsTokenCorrect(ctx context.Context, in *IsTokenCorrectRequest, opts ...grpc.CallOption) (*IsTokenCorrectResponse, error)
 }
 
 type authenticationClient struct {
@@ -49,9 +49,9 @@ func (c *authenticationClient) LoginUser(ctx context.Context, in *UserLoginReque
 	return out, nil
 }
 
-func (c *authenticationClient) RetrieveToken(ctx context.Context, in *RetrieveTokenRequest, opts ...grpc.CallOption) (*RetrieveTokenResponse, error) {
-	out := new(RetrieveTokenResponse)
-	err := c.cc.Invoke(ctx, "/main.Authentication/RetrieveToken", in, out, opts...)
+func (c *authenticationClient) IsTokenCorrect(ctx context.Context, in *IsTokenCorrectRequest, opts ...grpc.CallOption) (*IsTokenCorrectResponse, error) {
+	out := new(IsTokenCorrectResponse)
+	err := c.cc.Invoke(ctx, "/main.Authentication/IsTokenCorrect", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (c *authenticationClient) RetrieveToken(ctx context.Context, in *RetrieveTo
 type AuthenticationServer interface {
 	RegisterUser(context.Context, *UserRegisterRequest) (*UserRegisterResponse, error)
 	LoginUser(context.Context, *UserLoginRequest) (*UserLoginResponse, error)
-	RetrieveToken(context.Context, *RetrieveTokenRequest) (*RetrieveTokenResponse, error)
+	IsTokenCorrect(context.Context, *IsTokenCorrectRequest) (*IsTokenCorrectResponse, error)
 	mustEmbedUnimplementedAuthenticationServer()
 }
 
@@ -78,8 +78,8 @@ func (UnimplementedAuthenticationServer) RegisterUser(context.Context, *UserRegi
 func (UnimplementedAuthenticationServer) LoginUser(context.Context, *UserLoginRequest) (*UserLoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoginUser not implemented")
 }
-func (UnimplementedAuthenticationServer) RetrieveToken(context.Context, *RetrieveTokenRequest) (*RetrieveTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RetrieveToken not implemented")
+func (UnimplementedAuthenticationServer) IsTokenCorrect(context.Context, *IsTokenCorrectRequest) (*IsTokenCorrectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsTokenCorrect not implemented")
 }
 func (UnimplementedAuthenticationServer) mustEmbedUnimplementedAuthenticationServer() {}
 
@@ -130,20 +130,20 @@ func _Authentication_LoginUser_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Authentication_RetrieveToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RetrieveTokenRequest)
+func _Authentication_IsTokenCorrect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsTokenCorrectRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthenticationServer).RetrieveToken(ctx, in)
+		return srv.(AuthenticationServer).IsTokenCorrect(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/main.Authentication/RetrieveToken",
+		FullMethod: "/main.Authentication/IsTokenCorrect",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthenticationServer).RetrieveToken(ctx, req.(*RetrieveTokenRequest))
+		return srv.(AuthenticationServer).IsTokenCorrect(ctx, req.(*IsTokenCorrectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -164,8 +164,8 @@ var Authentication_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Authentication_LoginUser_Handler,
 		},
 		{
-			MethodName: "RetrieveToken",
-			Handler:    _Authentication_RetrieveToken_Handler,
+			MethodName: "IsTokenCorrect",
+			Handler:    _Authentication_IsTokenCorrect_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -51,7 +51,7 @@ type PUTResponseEqualAlbumModel struct {
 
 type DELETERequestEqualAlbumModel struct {
 	Data struct {
-		Name      string  `json:"name"`
+		Name   string   `json:"name"`
 		Photos [][]byte `json:"photos"`
 		Videos [][]byte `json:"videos"`
 	} `json:"data"`

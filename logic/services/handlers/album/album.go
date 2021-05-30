@@ -24,14 +24,14 @@ type album struct{}
 func (a *album) GetHandler() http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		at, _ := r.Cookie("at")
-		lt, _ := r.Cookie("lt")
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
 
 		grpcResp, err := client.NewPhotoClient.GetAlbums(
 			context.Background(),
 			&proto.GetAlbumsRequest{
-				AccessToken: at.Value,
-				LoginToken:  lt.Value,
+				AccessToken: at[0],
+				LoginToken:  lt[0],
 			},
 		)
 		if err != nil {
@@ -71,16 +71,16 @@ func (a *album) PostHandler() http.Handler {
 			log.Logger.Fatalln(err)
 		}
 
-		at, _ := r.Cookie("at")
-		lt, _ := r.Cookie("lt")
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
 
 		resp := new(albummodel.POSTResponseAlbumModel)
 
 		grpcResp, err := client.NewPhotoClient.CreateAlbum(
 			context.Background(),
 			&proto.CreateAlbumRequest{
-				AccessToken: at.Value,
-				LoginToken:  lt.Value,
+				AccessToken: at[0],
+				LoginToken:  lt[0],
 				Name:        req.Data.Name,
 			},
 		)
@@ -107,16 +107,16 @@ func (a *album) DeleteHandler() http.Handler {
 			log.Logger.Fatalln("Name of album is not passed")
 		}
 
-		at, _ := r.Cookie("at")
-		lt, _ := r.Cookie("lt")
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
 
 		resp := new(albummodel.DELETEResponseAlbumModel)
 
 		grpcResp, err := client.NewPhotoClient.DeleteAlbum(
 			context.Background(),
 			&proto.DeleteAlbumRequest{
-				AccessToken: at.Value,
-				LoginToken:  lt.Value,
+				AccessToken: at[0],
+				LoginToken:  lt[0],
 				Name:        values[0],
 			},
 		)
