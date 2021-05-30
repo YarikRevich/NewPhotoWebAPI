@@ -8,7 +8,6 @@ import (
 	"NewPhotoWeb/logic/proto"
 	avatarmodel "NewPhotoWeb/logic/services/models/account/avatar"
 
-
 	"NewPhotoWeb/log"
 	"NewPhotoWeb/logic/client"
 )
@@ -22,18 +21,19 @@ type avatar struct{}
 
 func (a *avatar) GetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		at, _ := r.Cookie("at")
-		lt, _ := r.Cookie("lt")
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
 
 		grpcResp, err := client.NewPhotoClient.GetUserAvatar(
 			context.Background(),
 			&proto.GetUserAvatarRequest{
-				AccessToken: at.Value,
-				LoginToken:  lt.Value,
+				AccessToken: at[0],
+				LoginToken:  lt[0],
 			},
 		)
 		if err != nil {
-			log.Logger.ClientError(); client.Restart()
+			log.Logger.ClientError()
+			client.Restart()
 		}
 
 		var resp avatarmodel.GETResponseAvatarModel
@@ -49,8 +49,8 @@ func (a *avatar) GetHandler() http.Handler {
 
 func (a *avatar) PostHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		at, _ := r.Cookie("at")
-		lt, _ := r.Cookie("lt")
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
 
 		var req avatarmodel.POSTRequestAvatarModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -60,13 +60,14 @@ func (a *avatar) PostHandler() http.Handler {
 		grpcResp, err := client.NewPhotoClient.SetUserAvatar(
 			context.Background(),
 			&proto.SetUserAvatarRequest{
-				AccessToken: at.Value,
-				LoginToken:  lt.Value,
+				AccessToken: at[0],
+				LoginToken:  lt[0],
 				Avatar:      req.Data.Avatar,
 			},
 		)
 		if err != nil {
-			log.Logger.ClientError(); client.Restart()
+			log.Logger.ClientError()
+			client.Restart()
 		}
 
 		resp := new(avatarmodel.POSTResponseAvatarModel)

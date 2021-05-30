@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"google.golang.org/grpc"
 )
@@ -72,6 +73,7 @@ func Restart() {
 		if r, err := NewPhotoClient.Ping(context.Background(), &proto.PingRequest{}); err == nil && r.GetPong() {
 			break
 		}
+		time.Sleep(5 * time.Second)
 		log.Logger.ClientError()
 	}
 }

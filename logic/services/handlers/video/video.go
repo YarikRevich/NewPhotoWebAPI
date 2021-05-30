@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-
 	"NewPhotoWeb/log"
 	"NewPhotoWeb/logic/client"
 )
@@ -20,8 +19,8 @@ type video struct{}
 
 func (a *video) PostHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		at, _ := r.Cookie("at")
-		lt, _ := r.Cookie("lt")
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
 
 		var req videomodel.POSTRequestVideoModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -30,21 +29,24 @@ func (a *video) PostHandler() http.Handler {
 
 		stream, err := client.NewPhotoClient.UploadVideo(context.Background())
 		if err != nil {
-			log.Logger.ClientError(); client.Restart()
+			log.Logger.ClientError()
+			client.Restart()
 		}
 		for _, v := range req.Data {
 			if err := stream.Send(&proto.UploadVideoRequest{
-				AccessToken: at.Value,
-				LoginToken:  lt.Value,
+				AccessToken: at[0],
+				LoginToken:  lt[0],
 				Video:       v.File,
 				Extension:   v.Extension,
 				Size:        v.Size,
 			}); err != nil {
-				log.Logger.ClientError(); client.Restart()
+				log.Logger.ClientError()
+				client.Restart()
 			}
 		}
 		if err := stream.CloseSend(); err != nil {
-			log.Logger.ClientError(); client.Restart()
+			log.Logger.ClientError()
+			client.Restart()
 		}
 
 		resp := new(videomodel.POSTResponseVideoModel)

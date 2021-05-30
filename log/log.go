@@ -22,7 +22,7 @@ type Log struct {
 }
 
 func (l *Log) ClientError() {
-	cprint.P(cprint.ERROR, "Client does not respond, try to restart ...")
+	cprint.P(cprint.ERROR, "\nClient does not respond, try to restart ...")
 }
 
 func (l *Log) OpenLogFile() *os.File {

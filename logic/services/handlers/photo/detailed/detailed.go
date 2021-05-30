@@ -26,14 +26,14 @@ func (a *detailedphoto) PostHandler() http.Handler {
 			log.Logger.Fatalln(err)
 		}
 
-		at, _ := r.Cookie("at")
-		lt, _ := r.Cookie("lt")
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
 
 		grpcResp, err := client.NewPhotoClient.GetFullPhotoByThumbnail(
 			context.Background(),
 			&proto.GetFullPhotoByThumbnailRequest{
-				AccessToken: at.Value,
-				LoginToken:  lt.Value,
+				AccessToken: at[0],
+				LoginToken:  lt[0],
 				Thumbnail:   req.Data.Thumbnail,
 			},
 		)

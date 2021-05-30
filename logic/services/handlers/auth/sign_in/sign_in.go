@@ -27,11 +27,14 @@ func (a *signin) PostHandler() http.Handler {
 			log.Logger.Fatalln(err)
 		}
 
+		sourceType := r.Header["S-Type"]
+
 		grpcResp, err := client.NewPhotoAuthClient.LoginUser(
 			context.Background(),
 			&proto.UserLoginRequest{
-				Login:    req.Data.Login,
-				Password: req.Data.Password,
+				Login:      req.Data.Login,
+				Password:   req.Data.Password,
+				SourceType: sourceType[0],
 			})
 		if err != nil {
 			log.Logger.ClientError()
@@ -41,8 +44,8 @@ func (a *signin) PostHandler() http.Handler {
 		resp := new(signinmodel.GETResponseSignInModel)
 
 		if grpcResp.GetOk() {
-			http.SetCookie(w, &http.Cookie{Name: "at", Value: grpcResp.AccessToken, Path: "/"})
-			http.SetCookie(w, &http.Cookie{Name: "lt", Value: grpcResp.LoginToken, Path: "/"})
+			w.Header().Add("X-At", grpcResp.GetAccessToken())
+			w.Header().Add("X-Lt", grpcResp.GetLoginToken())
 			resp.Service.Ok = true
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {

@@ -3,6 +3,7 @@ package middlewares
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -18,34 +19,41 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		if utils.IsAllowed(r.URL.Path) {
 			next.ServeHTTP(w, r)
 		} else {
-			errResp := new(errormodel.ERRORAuthModel)
-			errResp.Service.Error = errormodel.AUTH_ERROR
-			at, err := r.Cookie("at")
-			if err != nil {
+			at := r.Header["X-At"]
+			lt := r.Header["X-Lt"]
+
+			if len(at) == 0 || len(lt) == 0 {
+				errResp := new(errormodel.ERRORAuthModel)
+				errResp.Service.Error = errormodel.AUTH_ERROR
 				if err := json.NewEncoder(w).Encode(errResp); err != nil {
 					log.Logger.Fatalln(err)
 				}
 				return
 			}
 
-			lt, err := r.Cookie("lt")
+			sourceType := r.Header["S-Type"]
+
+			grpcResp, err := client.NewPhotoAuthClient.RetrieveToken(
+				context.Background(),
+				&proto.RetrieveTokenRequest{
+					AccessToken: at[0],
+					LoginToken:  lt[0],
+					SourceType:  sourceType[0],
+				},
+			)
 			if err != nil {
-				if err := json.NewEncoder(w).Encode(errResp); err != nil {
-					log.Logger.Fatalln(err)
-				}
-				return
+				log.Logger.ClientError()
+				client.Restart()
 			}
 
-			grpcResp, err := client.NewPhotoAuthClient.RetrieveToken(context.Background(), &proto.RetrieveTokenRequest{AccessToken: at.Value, LoginToken: lt.Value})
-			if err != nil {
-				log.Logger.Fatalln(err)
-			}
+			fmt.Println(at[0], lt[0])
+			fmt.Println(grpcResp.GetOk())
+			fmt.Println(r.URL.Path)
 			if grpcResp.GetOk() {
-				delete(r.Header, "Cookie")
-				r.AddCookie(&http.Cookie{Name: "at", Value: grpcResp.AccessToken, Path: "/"})
-				r.AddCookie(&http.Cookie{Name: "lt", Value: grpcResp.LoginToken, Path: "/"})
-				http.SetCookie(w, &http.Cookie{Name: "at", Value: grpcResp.AccessToken, Path: "/"})
-				http.SetCookie(w, &http.Cookie{Name: "lt", Value: grpcResp.LoginToken, Path: "/"})
+				r.Header.Set("X-At", grpcResp.GetAccessToken())
+				w.Header().Add("X-At", grpcResp.GetAccessToken())
+				r.Header.Set("X-Lt", grpcResp.GetLoginToken())
+				w.Header().Add("X-Lt", grpcResp.GetLoginToken())
 				next.ServeHTTP(w, r)
 			} else {
 				resp := new(errormodel.ERRORAuthModel)

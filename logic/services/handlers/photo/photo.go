@@ -15,7 +15,6 @@ import (
 	photomodel "NewPhotoWeb/logic/services/models/photo"
 	"NewPhotoWeb/utils"
 
-
 	"NewPhotoWeb/log"
 	"NewPhotoWeb/logic/client"
 )
@@ -31,18 +30,19 @@ func (a *photo) GetHandler() http.Handler {
 	//Get handler for photo page ...
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		at, _ := r.Cookie("at")
-		lt, _ := r.Cookie("lt")
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
 
 		grpcResp, err := client.NewPhotoClient.GetPhotos(
 			context.Background(),
 			&proto.GetPhotosRequest{
-				AccessToken: at.Value,
-				LoginToken:  lt.Value,
+				AccessToken: at[0],
+				LoginToken:  lt[0],
 			},
 		)
 		if err != nil {
-			log.Logger.ClientError(); client.Restart()
+			log.Logger.ClientError()
+			client.Restart()
 		}
 		resp := new(photomodel.GETResponsePhotoModel)
 
@@ -62,7 +62,8 @@ func (a *photo) GetHandler() http.Handler {
 		}
 
 		if err := grpcResp.CloseSend(); err != nil {
-			log.Logger.ClientError(); client.Restart()
+			log.Logger.ClientError()
+			client.Restart()
 		}
 		resp.Service.Ok = true
 
@@ -76,8 +77,8 @@ func (a *photo) PostHandler() http.Handler {
 	//Post handler for photo page ...
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		at, _ := r.Cookie("at")
-		lt, _ := r.Cookie("lt")
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
 
 		var req photomodel.POSTRequestPhotoModel
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -86,7 +87,8 @@ func (a *photo) PostHandler() http.Handler {
 
 		stream, err := client.NewPhotoClient.UploadPhoto(context.Background())
 		if err != nil {
-			log.Logger.ClientError(); client.Restart()
+			log.Logger.ClientError()
+			client.Restart()
 		}
 		for _, value := range req.Data {
 			var img image.Image
@@ -114,18 +116,20 @@ func (a *photo) PostHandler() http.Handler {
 			}
 
 			if err = stream.Send(&proto.UploadPhotoRequest{
-				AccessToken: at.Value,
-				LoginToken:  lt.Value,
+				AccessToken: at[0],
+				LoginToken:  lt[0],
 				Photo:       value.File,
 				Thumbnail:   thumbnail.Bytes(),
 				Extension:   value.Extension,
 				Size:        value.Size,
 			}); err != nil {
-				log.Logger.ClientError(); client.Restart()
+				log.Logger.ClientError()
+				client.Restart()
 			}
 		}
 		if err := stream.CloseSend(); err != nil {
-			log.Logger.ClientError(); client.Restart()
+			log.Logger.ClientError()
+			client.Restart()
 		}
 		resp := new(photomodel.POSTResponsePhotoModel)
 		resp.Service.Ok = true

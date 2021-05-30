@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-
 	"NewPhotoWeb/log"
 	"NewPhotoWeb/logic/client"
 )
@@ -21,31 +20,37 @@ type checkauth struct{}
 
 func (a *checkauth) GetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		errResp := new(errormodel.ERRORAuthModel)
-		errResp.Service.Error = errormodel.AUTH_ERROR
-		at, err := r.Cookie("at")
-		if err != nil {
-			if err := json.NewEncoder(w).Encode(errResp); err != nil {
-				log.Logger.Fatalln(err)
-			}
-			return
-		}
-		lt, err := r.Cookie("lt")
-		if err != nil {
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
+
+		if len(at) == 0 || len(lt) == 0 {
+			errResp := new(errormodel.ERRORAuthModel)
+			errResp.Service.Error = errormodel.AUTH_ERROR
 			if err := json.NewEncoder(w).Encode(errResp); err != nil {
 				log.Logger.Fatalln(err)
 			}
 			return
 		}
 
-		grpcResp, err := client.NewPhotoAuthClient.RetrieveToken(context.Background(), &proto.RetrieveTokenRequest{AccessToken: at.Value, LoginToken: lt.Value})
+		sourceType := r.Header["S-Type"]
+
+		grpcResp, err := client.NewPhotoAuthClient.RetrieveToken(
+			context.Background(),
+			&proto.RetrieveTokenRequest{
+				AccessToken: at[0],
+				LoginToken:  lt[0],
+				SourceType:  sourceType[0],
+			},
+		)
 		if err != nil {
-			log.Logger.ClientError(); client.Restart()
+			log.Logger.ClientError()
+			client.Restart()
 		}
+
 		resp := new(checkauthmodel.GETResponseCheckAuthModel)
 		if grpcResp.GetOk() {
-			http.SetCookie(w, &http.Cookie{Name: "at", Value: grpcResp.AccessToken})
-			http.SetCookie(w, &http.Cookie{Name: "lt", Value: grpcResp.LoginToken})
+			w.Header().Add("X-At", grpcResp.GetAccessToken())
+			w.Header().Add("X-Lt", grpcResp.GetLoginToken())
 			resp.Service.Ok = true
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {

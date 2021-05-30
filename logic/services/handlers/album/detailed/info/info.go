@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-
 	"NewPhotoWeb/log"
 	"NewPhotoWeb/logic/client"
 	"NewPhotoWeb/logic/proto"
@@ -20,28 +19,28 @@ type infodetailedalbum struct{}
 
 func (a *infodetailedalbum) GetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		values, ok := r.URL.Query()["name"]
-		if !ok {
-			log.Logger.Fatalln("Album name is empty!")
-		}
+		// values, ok := r.URL.Query()["name"]
+		// if !ok {
+		// 	log.Logger.Fatalln("Album name is empty!")
+		// }
 
 		at, _ := r.Cookie("at")
 		lt, _ := r.Cookie("lt")
 
-		grpcResp, err := client.NewPhotoClient.GetAlbumInfo(
+		grpcResp, err := client.NewPhotoClient.GetAlbumsNum(
 			context.Background(),
-			&proto.GetAlbumInfoRequest{
+			&proto.GetAlbumsNumRequest{
 				AccessToken: at.Value,
 				LoginToken:  lt.Value,
-				Album:       values[0],
 			},
 		)
 		if err != nil {
-			log.Logger.ClientError(); client.Restart()
+			log.Logger.ClientError()
+			client.Restart()
 		}
 
 		var resp infodetailedalbummodel.GETResponseGetAlbumInfoModel
-		resp.Result.MediaNum = grpcResp.GetMediaNum()
+		resp.Result.MediaNum = grpcResp.GetNum()
 		resp.Service.Ok = grpcResp.GetOk()
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {

@@ -24,14 +24,14 @@ func (a *account) GetHandler() http.Handler {
 	//Get handler for account page  ...
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		at, _ := r.Cookie("at")
-		lt, _ := r.Cookie("lt")
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
 
 		grpcResp, err := client.NewPhotoClient.GetUserinfo(
 			context.Background(),
 			&proto.GetUserinfoRequest{
-				AccessToken: at.Value,
-				LoginToken:  lt.Value,
+				AccessToken: at[0],
+				LoginToken:  lt[0],
 			},
 		)
 		if err != nil {
@@ -57,14 +57,14 @@ func (a *account) DeleteHandler() http.Handler {
 	//Get handler for account page  ...
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		at, _ := r.Cookie("at")
-		lt, _ := r.Cookie("lt")
+		at := r.Header["X-At"]
+		lt := r.Header["X-Lt"]
 
 		grpcResp, err := client.NewPhotoClient.DeleteAccount(
 			context.Background(),
 			&proto.DeleteAccountRequest{
-				AccessToken: at.Value,
-				LoginToken:  lt.Value,
+				AccessToken: at[0],
+				LoginToken:  lt[0],
 			},
 		)
 		if err != nil {
