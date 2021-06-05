@@ -1,4 +1,4 @@
-package models
+package error
 
 const (
 	AUTH_ERROR = iota

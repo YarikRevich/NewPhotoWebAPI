@@ -1,7 +1,7 @@
-package models
+package checkauth
+
+import "NewPhotoWeb/logic/services/models/service"
 
 type GETResponseCheckAuthModel struct {
-	Service struct {
-		Ok      bool   `json:"ok"`
-	} `json:"service"`
+	service.ServiceModel
 }

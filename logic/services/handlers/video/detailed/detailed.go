@@ -6,19 +6,19 @@ import (
 	"net/http"
 
 	"NewPhotoWeb/logic/proto"
-	detailedphotomodel "NewPhotoWeb/logic/services/models/photo/detailed"
+	detailedvideomodel "NewPhotoWeb/logic/services/models/video/detailed"
 
 	"NewPhotoWeb/log"
 	"NewPhotoWeb/logic/client"
 )
 
-type IDetailedPhoto interface {
+type IDetailedVideo interface {
 	GetHandler() http.Handler
 }
 
-type detailedphoto struct{}
+type detailedvideo struct{}
 
-func (a *detailedphoto) GetHandler() http.Handler {
+func (a *detailedvideo) GetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t, ok := r.URL.Query()["thumbnail"]
 		if !ok {
@@ -34,7 +34,7 @@ func (a *detailedphoto) GetHandler() http.Handler {
 				AccessToken: at[0],
 				LoginToken:  lt[0],
 				Thumbnail:   []byte(t[0]),
-				MediaType:   proto.MediaType_Photo,
+				MediaType:   proto.MediaType_Video,
 			},
 		)
 		if err != nil {
@@ -42,7 +42,7 @@ func (a *detailedphoto) GetHandler() http.Handler {
 			client.Restart()
 		}
 
-		resp := new(detailedphotomodel.GETResponseDetailedPhotoModel)
+		resp := new(detailedvideomodel.GETResponseDetailedVideoModel)
 		resp.Service.Ok = true
 		resp.Result.Photo = grpcResp.GetMedia()
 
@@ -53,6 +53,6 @@ func (a *detailedphoto) GetHandler() http.Handler {
 
 }
 
-func NewDetailedPhotoHandler() IDetailedPhoto {
-	return new(detailedphoto)
+func NewDetailedVideoHandler() IDetailedVideo {
+	return new(detailedvideo)
 }

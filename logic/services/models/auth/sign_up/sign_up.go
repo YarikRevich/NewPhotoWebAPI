@@ -1,4 +1,6 @@
-package models
+package signup
+
+import "NewPhotoWeb/logic/services/models/service"
 
 type POSTRequestRegestrationModel struct {
 	Data struct {
@@ -11,7 +13,5 @@ type POSTRequestRegestrationModel struct {
 }
 
 type POSTResponseRegestrationModel struct {
-	Service struct {
-		Ok bool `json:"ok"`
-	} `json:"service"`
+	service.ServiceModel
 }

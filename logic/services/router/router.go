@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 
@@ -15,6 +16,7 @@ import (
 	signup "NewPhotoWeb/logic/services/handlers/auth/sign_up"
 	photo "NewPhotoWeb/logic/services/handlers/photo"
 	detailedphoto "NewPhotoWeb/logic/services/handlers/photo/detailed"
+	detailedvideo "NewPhotoWeb/logic/services/handlers/video/detailed"
 	video "NewPhotoWeb/logic/services/handlers/video"
 	"NewPhotoWeb/logic/services/middlewares"
 )
@@ -26,6 +28,7 @@ const (
 	SignOutPath            = "/sign_out"
 	PhotosDetailedPath     = "/photos/detailed"
 	PhotosPath             = "/photos"
+	VideosDetailedPath     = "/videos/detailed"
 	VideosPath             = "/videos"
 	AlbumsPath             = "/albums"
 	AlbumsDetailedPath     = "/albums/detailed"
@@ -42,29 +45,30 @@ func GetHandler() *mux.Router {
 	router.Use(middlewares.AuthMiddleware)
 
 	router.HandleFunc(CheckAuthPath, func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(w.Header())
 		pagehandler := checkauth.NewCheckAuthHandler()
 		pagehandler.GetHandler().ServeHTTP(w, r)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	router.HandleFunc(SignUpPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := signup.NewSignUpHandler()
 		pagehandler.PostHandler().ServeHTTP(w, r)
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
 
 	router.HandleFunc(SignInPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := signin.NewSignInPageHandler()
 		pagehandler.PostHandler().ServeHTTP(w, r)
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
 
 	router.HandleFunc(SignOutPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := signout.NewSignOutPageHandler()
 		pagehandler.GetHandler().ServeHTTP(w, r)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	router.HandleFunc(PhotosDetailedPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := detailedphoto.NewDetailedPhotoHandler()
-		pagehandler.PostHandler().ServeHTTP(w, r)
-	}).Methods("POST")
+		pagehandler.GetHandler().ServeHTTP(w, r)
+	}).Methods("GET", "OPTIONS")
 
 	router.HandleFunc(PhotosPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := photo.NewPhotoPageHandler()
@@ -74,12 +78,17 @@ func GetHandler() *mux.Router {
 		case "POST":
 			pagehandler.PostHandler().ServeHTTP(w, r)
 		}
-	}).Methods("GET", "POST")
+	}).Methods("GET", "POST", "OPTIONS")
 
 	router.HandleFunc(VideosPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := video.NewVideoPageHandler()
 		pagehandler.PostHandler().ServeHTTP(w, r)
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
+
+	router.HandleFunc(VideosDetailedPath, func(w http.ResponseWriter, r *http.Request) {
+		pagehandler := detailedvideo.NewDetailedVideoHandler()
+		pagehandler.GetHandler().ServeHTTP(w, r)
+	}).Methods("GET",  "OPTIONS")
 
 	router.HandleFunc(AlbumsPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := album.NewAlbumHandler()
@@ -91,7 +100,7 @@ func GetHandler() *mux.Router {
 		case "DELETE":
 			pagehandler.DeleteHandler().ServeHTTP(w, r)
 		}
-	}).Methods("GET", "POST", "DELETE")
+	}).Methods("GET", "POST", "DELETE", "OPTIONS")
 
 	router.HandleFunc(AlbumsDetailedPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := detailedalbum.NewDetailedAlbumPageHandler()
@@ -103,7 +112,7 @@ func GetHandler() *mux.Router {
 		case "DELETE":
 			pagehandler.DeleteHandler().ServeHTTP(w, r)
 		}
-	}).Methods("GET", "PUT", "DELETE")
+	}).Methods("GET", "PUT", "DELETE", "OPTIONS")
 
 	router.HandleFunc(AlbumsDetailedInfoPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := infodetailedalbum.NewInfoDetailedAlbumPageHandler()
@@ -118,7 +127,7 @@ func GetHandler() *mux.Router {
 		case "DELETE":
 			pagehandler.DeleteHandler().ServeHTTP(w, r)
 		}
-	}).Methods("GET", "DELETE")
+	}).Methods("GET", "DELETE", "OPTIONS")
 
 	router.HandleFunc(AccountAvatarPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := avatar.NewAvatarHandler()
@@ -128,7 +137,7 @@ func GetHandler() *mux.Router {
 		case "POST":
 			pagehandler.PostHandler().ServeHTTP(w, r)
 		}
-	}).Methods("GET", "POST")
+	}).Methods("GET", "POST", "OPTIONS")
 
 	return router
 }

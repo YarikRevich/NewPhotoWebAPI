@@ -1,13 +1,12 @@
-package models
+package avatar
+
+import "NewPhotoWeb/logic/services/models/service"
 
 type GETResponseAvatarModel struct {
 	Result struct {
 		Avatar []byte `json:"avatar"`
 	} `json:"result"`
-	Service struct {
-		Ok bool `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }
 
 type POSTRequestAvatarModel struct {
@@ -17,8 +16,5 @@ type POSTRequestAvatarModel struct {
 }
 
 type POSTResponseAvatarModel struct {
-	Service struct {
-		Ok bool `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }

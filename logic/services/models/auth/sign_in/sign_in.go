@@ -1,4 +1,6 @@
-package models
+package signin
+
+import "NewPhotoWeb/logic/services/models/service"
 
 type GETRequestSignInModel struct {
 	Data struct {
@@ -8,8 +10,5 @@ type GETRequestSignInModel struct {
 }
 
 type GETResponseSignInModel struct {
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }

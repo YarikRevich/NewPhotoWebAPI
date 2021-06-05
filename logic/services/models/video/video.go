@@ -1,4 +1,6 @@
-package models
+package video
+
+import "NewPhotoWeb/logic/services/models/service"
 
 type POSTRequestVideoModel struct {
 	Data []struct {
@@ -10,8 +12,5 @@ type POSTRequestVideoModel struct {
 }
 
 type POSTResponseVideoModel struct {
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }

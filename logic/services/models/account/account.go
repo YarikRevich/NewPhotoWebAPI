@@ -1,4 +1,6 @@
-package models
+package account
+
+import "NewPhotoWeb/logic/services/models/service"
 
 type GETResponseAccountModel struct {
 	Result struct {
@@ -6,15 +8,9 @@ type GETResponseAccountModel struct {
 		Secondname string  `json:"secondname"`
 		Storage    float64 `json:"storage"`
 	} `json:"result"`
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }
 
 type DELETEResponseAccountModel struct {
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }

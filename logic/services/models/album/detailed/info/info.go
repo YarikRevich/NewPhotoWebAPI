@@ -1,5 +1,7 @@
 package info
 
+import "NewPhotoWeb/logic/services/models/service"
+
 type GETRequestGetAlbumInfoModel struct {
 	Data struct {
 		Name string `json:"name"`
@@ -10,8 +12,5 @@ type GETResponseGetAlbumInfoModel struct {
 	Result struct {
 		MediaNum int64 `json:"media_num"`
 	} `json:"result"`
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }

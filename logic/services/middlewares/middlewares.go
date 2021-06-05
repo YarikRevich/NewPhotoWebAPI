@@ -3,6 +3,7 @@ package middlewares
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -15,6 +16,7 @@ import (
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(w.Header())
 		if utils.IsAllowed(r.URL.Path) {
 			next.ServeHTTP(w, r)
 		} else {
@@ -48,6 +50,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			if grpcResp.GetOk() {
 				next.ServeHTTP(w, r)
 			} else {
+				fmt.Println(w.Header())
 				resp := new(errormodel.ERRORAuthModel)
 				resp.Service.Error = errormodel.NOT_THIS_TIME_ERROR
 				if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -71,7 +74,8 @@ func FetchingMiddleware(next http.Handler) http.Handler {
 
 func EnableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", r.URL.Host)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
 		next.ServeHTTP(w, r)
 	})
 }

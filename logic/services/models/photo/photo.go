@@ -1,14 +1,13 @@
-package models
+package photo
+
+import "NewPhotoWeb/logic/services/models/service"
 
 type GETResponsePhotoModel struct {
 	Result []struct {
 		Thumbnail []byte   `json:"thumbnail"`
 		Tags      []string `json:"tags"`
 	} `json:"result"`
-	Service struct {
-		Message string `json:"message"`
-		Ok      bool   `json:"ok"`
-	} `json:"service"`
+	service.ServiceModel
 }
 
 type POSTRequestPhotoModel struct {
@@ -21,8 +20,5 @@ type POSTRequestPhotoModel struct {
 }
 
 type POSTResponsePhotoModel struct {
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }

@@ -1,4 +1,6 @@
-package models
+package albums
+
+import "NewPhotoWeb/logic/services/models/service"
 
 type GETResponseAlbumModel struct {
 	Result []struct {
@@ -6,10 +8,7 @@ type GETResponseAlbumModel struct {
 		LatestPhoto          []byte `json:"latestphoto"`
 		LatestPhotoThumbnail []byte `json:"latestphotothumbnail"`
 	} `json:"result"`
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }
 
 type POSTRequestAlbumModel struct {
@@ -19,10 +18,7 @@ type POSTRequestAlbumModel struct {
 }
 
 type POSTResponseAlbumModel struct {
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }
 
 type DELETERequestAlbumModel struct {
@@ -32,10 +28,7 @@ type DELETERequestAlbumModel struct {
 }
 
 type DELETEResponseAlbumModel struct {
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }
 
 type PUTRequestAlbumModel struct {
@@ -50,8 +43,5 @@ type PUTRequestAlbumModel struct {
 }
 
 type PUTResponseAlbumModel struct {
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }

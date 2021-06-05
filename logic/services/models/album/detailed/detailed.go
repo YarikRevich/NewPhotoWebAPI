@@ -1,4 +1,6 @@
-package models
+package equalalbum
+
+import "NewPhotoWeb/logic/services/models/service"
 
 type GETResponseEqualAlbumModel struct {
 	Result struct {
@@ -13,17 +15,11 @@ type GETResponseEqualAlbumModel struct {
 			Extension string `json:"extension"`
 		} `json:"videos"`
 	} `json:"result"`
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }
 
 type POSTResponseEqualAlbumModel struct {
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }
 
 type PUTRequestEqualAlbumModel struct {
@@ -43,10 +39,7 @@ type PUTRequestEqualAlbumModel struct {
 }
 
 type PUTResponseEqualAlbumModel struct {
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }
 
 type DELETERequestEqualAlbumModel struct {
@@ -58,8 +51,5 @@ type DELETERequestEqualAlbumModel struct {
 }
 
 type DELETEResponseEqualAlbumModel struct {
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }

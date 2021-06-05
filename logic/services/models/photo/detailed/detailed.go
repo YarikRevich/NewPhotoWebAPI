@@ -1,4 +1,6 @@
-package detailed
+package detailedphoto
+
+import "NewPhotoWeb/logic/services/models/service"
 
 type GETRequestDetailedPhotoModel struct {
 	Data struct {
@@ -10,8 +12,5 @@ type GETResponseDetailedPhotoModel struct {
 	Result struct {
 		Photo []byte `json:"photo"`
 	} `json:"result"`
-	Service struct {
-		Ok      bool   `json:"ok"`
-		Message string `json:"message"`
-	} `json:"service"`
+	service.ServiceModel
 }

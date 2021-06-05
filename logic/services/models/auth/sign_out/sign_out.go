@@ -1,7 +1,7 @@
-package models
+package signout
+
+import "NewPhotoWeb/logic/services/models/service"
 
 type GETResponseSignOutModel struct {
-	Service struct {
-		Ok bool `json:"ok"`
-	} `json:"service"`
+	service.ServiceModel
 }
