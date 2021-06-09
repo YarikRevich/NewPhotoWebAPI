@@ -8,7 +8,6 @@ import (
 
 	"net/http"
 
-
 	"NewPhotoWeb/log"
 	"NewPhotoWeb/logic/client"
 )
@@ -39,7 +38,8 @@ func (a *signup) PostHandler() http.Handler {
 				Secondname: req.Data.Secondname,
 			})
 		if err != nil {
-			log.Logger.ClientError(); client.Restart()
+			log.Logger.ClientError()
+			client.Restart()
 		}
 
 		resp.Service.Ok = grpcResp.GetOk()

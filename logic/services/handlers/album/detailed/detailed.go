@@ -1,7 +1,7 @@
 package detailed
 
 import (
-	"fmt"
+
 	"context"
 	"encoding/json"
 	"net/http"
@@ -79,7 +79,6 @@ func (a *detailedalbum) GetHandler() http.Handler {
 				recv.GetExtension(),
 			})
 		}
-		fmt.Println(len(resp.Result.Photos))
 		if err = grpcStreamPhotosResp.CloseSend(); err != nil {
 			log.Logger.ClientError()
 			client.Restart()

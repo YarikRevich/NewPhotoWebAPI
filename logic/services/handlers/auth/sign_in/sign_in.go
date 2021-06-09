@@ -28,13 +28,20 @@ func (a *signin) PostHandler() http.Handler {
 		}
 
 		sourceType := r.Header["S-Type"]
+		var sT proto.SourceType
+		switch sourceType[0] {
+		case "0":
+			sT = proto.SourceType_Web
+		case "1":
+			sT = proto.SourceType_Mobile
+		}
 
 		grpcResp, err := client.NewPhotoAuthClient.LoginUser(
 			context.Background(),
 			&proto.UserLoginRequest{
 				Login:      req.Data.Login,
 				Password:   req.Data.Password,
-				SourceType: sourceType[0],
+				SourceType: sT,
 			})
 		if err != nil {
 			log.Logger.ClientError()

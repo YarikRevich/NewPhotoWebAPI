@@ -34,12 +34,20 @@ func (a *checkauth) GetHandler() http.Handler {
 
 		sourceType := r.Header["S-Type"]
 
+		var sT proto.SourceType
+		switch sourceType[0] {
+		case "0":
+			sT = proto.SourceType_Web
+		case "1":
+			sT = proto.SourceType_Mobile
+		}
+
 		grpcResp, err := client.NewPhotoAuthClient.IsTokenCorrect(
 			context.Background(),
 			&proto.IsTokenCorrectRequest{
 				AccessToken: at[0],
 				LoginToken:  lt[0],
-				SourceType:  sourceType[0],
+				SourceType:  sT,
 			},
 		)
 		if err != nil {

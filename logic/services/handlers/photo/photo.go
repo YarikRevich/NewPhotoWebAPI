@@ -3,11 +3,13 @@ package photo
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"image"
 	"image/jpeg"
 	"image/png"
 	"net/http"
+	"strconv"
 
 	"github.com/nfnt/resize"
 
@@ -33,11 +35,30 @@ func (a *photo) GetHandler() http.Handler {
 		at := r.Header["X-At"]
 		lt := r.Header["X-Lt"]
 
+		offset, ok := r.URL.Query()["offset"]
+		if !ok {
+			log.Logger.Fatalln("Offset is empty!")
+		}
+		offsetNum, err := strconv.Atoi(offset[0])
+		if err != nil {
+			log.Logger.Fatalln(err)
+		}
+		page, ok := r.URL.Query()["page"]
+		if !ok {
+			log.Logger.Fatalln("Page is empty!")
+		}
+		pageNum, err := strconv.Atoi(page[0])
+		if err != nil {
+			log.Logger.Fatalln(err)
+		}
+
 		grpcResp, err := client.NewPhotoClient.GetPhotos(
 			context.Background(),
 			&proto.GetPhotosRequest{
 				AccessToken: at[0],
 				LoginToken:  lt[0],
+				Offset:      int64(offsetNum),
+				Page:        int64(pageNum),
 			},
 		)
 		if err != nil {
@@ -65,6 +86,7 @@ func (a *photo) GetHandler() http.Handler {
 			log.Logger.ClientError()
 			client.Restart()
 		}
+
 		resp.Service.Ok = true
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -90,29 +112,43 @@ func (a *photo) PostHandler() http.Handler {
 			log.Logger.ClientError()
 			client.Restart()
 		}
+
 		for _, value := range req.Data {
 			var img image.Image
+			var file = value.File
+			if b, err := base64.StdEncoding.DecodeString(string(value.File)); err == nil {
+				file = b
+			}
+
 			switch value.Extension {
 			case "png":
-				img, err = png.Decode(bytes.NewReader(value.File))
+				img, err = png.Decode(bytes.NewReader(file))
 				if err != nil {
 					log.Logger.Fatalln(err)
 				}
 			case "jpeg":
-				img, err = jpeg.Decode(bytes.NewReader(value.File))
+				img, err = jpeg.Decode(bytes.NewReader(file))
 				if err != nil {
 					log.Logger.Fatalln(err)
 				}
 			default:
 				continue
 			}
+
 			resized := resize.Resize(500, 500, img, resize.Lanczos3)
 
 			var buf bytes.Buffer
 			thumbnail := bytes.NewBuffer(buf.Bytes())
 
-			if err = jpeg.Encode(thumbnail, resized, nil); err != nil {
-				log.Logger.Fatalln(err)
+			switch value.Extension {
+			case "png":
+				if err = png.Encode(thumbnail, resized); err != nil {
+					log.Logger.Fatalln(err)
+				}
+			case "jpeg":
+				if err = jpeg.Encode(thumbnail, resized, nil); err != nil {
+					log.Logger.Fatalln(err)
+				}
 			}
 
 			if err = stream.Send(&proto.UploadPhotoRequest{

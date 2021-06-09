@@ -5,6 +5,7 @@ import (
 	"NewPhotoWeb/logic/proto"
 	"context"
 	"fmt"
+	"github.com/Kenshin/cprint"
 	"os"
 	"os/signal"
 	"syscall"
@@ -71,9 +72,9 @@ func Restart() {
 	for {
 		NewPhotoClient, NewPhotoAuthClient = New()
 		if r, err := NewPhotoClient.Ping(context.Background(), &proto.PingRequest{}); err == nil && r.GetPong() {
+			cprint.P(cprint.NOTICE, "Connection recovered!\n", cprint.CP{FgColor: cprint.Blue})
 			break
 		}
 		time.Sleep(5 * time.Second)
-		log.Logger.ClientError()
 	}
 }
