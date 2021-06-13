@@ -6,7 +6,6 @@ type GETResponseEqualAlbumModel struct {
 	Result struct {
 		Name   string `json:"name"`
 		Photos []struct {
-			Photo     []byte `json:"photo"`
 			Thumbnail []byte `json:"thumbnail"`
 			Extension string `json:"extension"`
 		} `json:"photos"`

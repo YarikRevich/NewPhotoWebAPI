@@ -219,7 +219,6 @@ func TestAlbumHandler(t *testing.T) {
 			if err := json.NewDecoder(l.Body).Decode(&a); err != nil {
 				b.Fail(err)
 			}
-			b.Assert(a.Result.Photos[0].Photo).Equal(i, "Album photo is not correct")
 			b.Assert(a.Result.Photos[0].Extension).Equal("png", "Album photo extension is not correct")
 			b.Assert(a.Result.Videos[0].Video).Equal(v, "Album video is not correct")
 			b.Assert(a.Result.Videos[0].Extension).Equal("mp4", "Album photo extension is not correct")

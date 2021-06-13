@@ -2,9 +2,15 @@ package detailedvideo
 
 import "NewPhotoWeb/logic/services/models/service"
 
-type GETResponseDetailedVideoModel struct {
+type POSTRequestDetailedVideoModel struct {
+	Data struct {
+		Thumbnail []byte `json:"thumbnail"`
+	} `json:"data"`
+}
+
+type POSTResponseDetailedVideoModel struct {
 	Result struct {
-		Photo []byte `json:"photo"`
+		Media []byte `json:"media"`
 	} `json:"result"`
 	service.ServiceModel
 }

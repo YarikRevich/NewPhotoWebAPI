@@ -1,9 +1,13 @@
 package detailed
 
 import (
-
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"net/http"
 	"strconv"
 
@@ -11,6 +15,7 @@ import (
 	"NewPhotoWeb/logic/client"
 	"NewPhotoWeb/logic/proto"
 	detailedalbummodel "NewPhotoWeb/logic/services/models/album/detailed"
+	"github.com/nfnt/resize"
 )
 
 type IDetailedAlbumPage interface {
@@ -70,11 +75,9 @@ func (a *detailedalbum) GetHandler() http.Handler {
 				break
 			}
 			resp.Result.Photos = append(resp.Result.Photos, struct {
-				Photo     []byte "json:\"photo\""
 				Thumbnail []byte "json:\"thumbnail\""
 				Extension string "json:\"extension\""
 			}{
-				recv.GetPhoto(),
 				recv.GetThumbnail(),
 				recv.GetExtension(),
 			})
@@ -222,11 +225,49 @@ func (a *detailedalbum) PutHandler() http.Handler {
 		}
 
 		for _, v := range req.Data.Photos {
+			var img image.Image
+			var file = v.File
+			if b, err := base64.StdEncoding.DecodeString(string(v.File)); err == nil {
+				file = b
+			}
+
+			switch v.Extension {
+			case "png":
+				img, err = png.Decode(bytes.NewReader(file))
+				if err != nil {
+					log.Logger.Fatalln(err)
+				}
+			case "jpeg":
+				img, err = jpeg.Decode(bytes.NewReader(file))
+				if err != nil {
+					log.Logger.Fatalln(err)
+				}
+			default:
+				continue
+			}
+
+			resized := resize.Resize(500, 500, img, resize.Lanczos3)
+
+			var buf bytes.Buffer
+			thumbnail := bytes.NewBuffer(buf.Bytes())
+
+			switch v.Extension {
+			case "png":
+				if err = png.Encode(thumbnail, resized); err != nil {
+					log.Logger.Fatalln(err)
+				}
+			case "jpeg":
+				if err = jpeg.Encode(thumbnail, resized, nil); err != nil {
+					log.Logger.Fatalln(err)
+				}
+			}
+
 			if err = streamImage.Send(
 				&proto.UploadPhotoToAlbumRequest{
 					AccessToken: at[0],
 					LoginToken:  lt[0],
 					Photo:       v.File,
+					Thumbnail:   thumbnail.Bytes(),
 					Extension:   v.Extension,
 					Size:        float64(v.Size),
 					Album:       req.Data.Name,

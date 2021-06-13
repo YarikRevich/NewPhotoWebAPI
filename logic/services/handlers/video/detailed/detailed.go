@@ -13,16 +13,16 @@ import (
 )
 
 type IDetailedVideo interface {
-	GetHandler() http.Handler
+	PostHandler() http.Handler
 }
 
 type detailedvideo struct{}
 
-func (a *detailedvideo) GetHandler() http.Handler {
+func (a *detailedvideo) PostHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t, ok := r.URL.Query()["thumbnail"]
-		if !ok {
-			log.Logger.Fatalln("Thumbnail is not passed")
+		var stat detailedvideomodel.POSTRequestDetailedVideoModel
+		if err := json.NewDecoder(r.Body).Decode(&stat); err != nil {
+			log.Logger.Fatalln(err)
 		}
 
 		at := r.Header["X-At"]
@@ -33,7 +33,7 @@ func (a *detailedvideo) GetHandler() http.Handler {
 			&proto.GetFullMediaByThumbnailRequest{
 				AccessToken: at[0],
 				LoginToken:  lt[0],
-				Thumbnail:   []byte(t[0]),
+				Thumbnail:   stat.Data.Thumbnail,
 				MediaType:   proto.MediaType_Video,
 			},
 		)
@@ -42,9 +42,9 @@ func (a *detailedvideo) GetHandler() http.Handler {
 			client.Restart()
 		}
 
-		resp := new(detailedvideomodel.GETResponseDetailedVideoModel)
+		resp := new(detailedvideomodel.POSTResponseDetailedVideoModel)
 		resp.Service.Ok = true
-		resp.Result.Photo = grpcResp.GetMedia()
+		resp.Result.Media = grpcResp.GetMedia()
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			log.Logger.Fatalln(err)

@@ -2,15 +2,15 @@ package detailedphoto
 
 import "NewPhotoWeb/logic/services/models/service"
 
-type GETRequestDetailedPhotoModel struct {
+type POSTRequestDetailedPhotoModel struct {
 	Data struct {
 		Thumbnail []byte `json:"thumbnail"`
 	} `json:"data"`
 }
 
-type GETResponseDetailedPhotoModel struct {
+type POSTResponseDetailedPhotoModel struct {
 	Result struct {
-		Photo []byte `json:"photo"`
+		Media []byte `json:"media"`
 	} `json:"result"`
 	service.ServiceModel
 }

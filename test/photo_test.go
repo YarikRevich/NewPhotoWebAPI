@@ -163,7 +163,7 @@ func TestPhotoHandler(t *testing.T) {
 
 			time.Sleep(2 * time.Second)
 
-			r := photodetailedmodel.GETRequestDetailedPhotoModel{}
+			r := photodetailedmodel.POSTRequestDetailedPhotoModel{}
 			r.Data.Thumbnail = a.Result[0].Thumbnail
 
 			by, err := json.Marshal(r)
@@ -176,11 +176,11 @@ func TestPhotoHandler(t *testing.T) {
 				b.Fail(err)
 			}
 
-			q := photodetailedmodel.GETResponseDetailedPhotoModel{}
+			q := photodetailedmodel.POSTResponseDetailedPhotoModel{}
 			if err := json.NewDecoder(rr.Body).Decode(&q); err != nil {
 				b.Fail(err)
 			}
-			b.Assert(q.Result.Photo).Equal(i, "Thumbnail is not gotten")
+			b.Assert(q.Result.Media).Equal(i, "Thumbnail is not gotten")
 			b.Assert(q.Service.Ok).IsTrue("Detailed photo getting failed")
 		})
 	})

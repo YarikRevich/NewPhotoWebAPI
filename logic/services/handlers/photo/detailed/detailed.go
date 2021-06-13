@@ -13,16 +13,16 @@ import (
 )
 
 type IDetailedPhoto interface {
-	GetHandler() http.Handler
+	PostHandler() http.Handler
 }
 
 type detailedphoto struct{}
 
-func (a *detailedphoto) GetHandler() http.Handler {
+func (a *detailedphoto) PostHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t, ok := r.URL.Query()["thumbnail"]
-		if !ok {
-			log.Logger.Fatalln("Thumbnail is not passed")
+		var stat detailedphotomodel.POSTRequestDetailedPhotoModel
+		if err := json.NewDecoder(r.Body).Decode(&stat); err != nil {
+			log.Logger.Fatalln(err)
 		}
 
 		at := r.Header["X-At"]
@@ -33,7 +33,7 @@ func (a *detailedphoto) GetHandler() http.Handler {
 			&proto.GetFullMediaByThumbnailRequest{
 				AccessToken: at[0],
 				LoginToken:  lt[0],
-				Thumbnail:   []byte(t[0]),
+				Thumbnail:   stat.Data.Thumbnail,
 				MediaType:   proto.MediaType_Photo,
 			},
 		)
@@ -42,9 +42,9 @@ func (a *detailedphoto) GetHandler() http.Handler {
 			client.Restart()
 		}
 
-		resp := new(detailedphotomodel.GETResponseDetailedPhotoModel)
+		resp := new(detailedphotomodel.POSTResponseDetailedPhotoModel)
 		resp.Service.Ok = true
-		resp.Result.Photo = grpcResp.GetMedia()
+		resp.Result.Media = grpcResp.GetMedia()
 
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			log.Logger.Fatalln(err)

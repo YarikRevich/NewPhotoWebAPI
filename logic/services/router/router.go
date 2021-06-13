@@ -78,10 +78,10 @@ func GetHandler() *mux.Router {
 	router.HandleFunc(PhotosDetailedPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := detailedphoto.NewDetailedPhotoHandler()
 		switch r.Method {
-		case "GET":
-			pagehandler.GetHandler().ServeHTTP(w, r)
+		case "POST":
+			pagehandler.PostHandler().ServeHTTP(w, r)
 		}
-	}).Methods("GET", "OPTIONS")
+	}).Methods("POST", "OPTIONS")
 
 	router.HandleFunc(PhotosPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := photo.NewPhotoPageHandler()
@@ -96,18 +96,20 @@ func GetHandler() *mux.Router {
 	router.HandleFunc(VideosPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := video.NewVideoPageHandler()
 		switch r.Method {
+		case "GET":
+			pagehandler.GetHandler().ServeHTTP(w, r)
 		case "POST":
 			pagehandler.PostHandler().ServeHTTP(w, r)
 		}
-	}).Methods("POST", "OPTIONS")
+	}).Methods("GET", "POST", "OPTIONS")
 
 	router.HandleFunc(VideosDetailedPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := detailedvideo.NewDetailedVideoHandler()
 		switch r.Method {
-		case "GET":
-			pagehandler.GetHandler().ServeHTTP(w, r)
+		case "POST":
+			pagehandler.PostHandler().ServeHTTP(w, r)
 		}
-	}).Methods("GET", "OPTIONS")
+	}).Methods("POST", "OPTIONS")
 
 	router.HandleFunc(AlbumsPath, func(w http.ResponseWriter, r *http.Request) {
 		pagehandler := album.NewAlbumHandler()
