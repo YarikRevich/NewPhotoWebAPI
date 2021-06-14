@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"NewPhotoWeb/internal"
 	"NewPhotoWeb/log"
 	"NewPhotoWeb/logic/client"
 	"NewPhotoWeb/logic/proto"
@@ -75,11 +76,11 @@ func (a *detailedalbum) GetHandler() http.Handler {
 				break
 			}
 			resp.Result.Photos = append(resp.Result.Photos, struct {
-				Thumbnail []byte "json:\"thumbnail\""
-				Extension string "json:\"extension\""
+				Thumbnail []byte   "json:\"thumbnail\""
+				Tags      []string "json:\"tags\""
 			}{
 				recv.GetThumbnail(),
-				recv.GetExtension(),
+				recv.GetTags(),
 			})
 		}
 		if err = grpcStreamPhotosResp.CloseSend(); err != nil {
@@ -109,11 +110,11 @@ func (a *detailedalbum) GetHandler() http.Handler {
 			}
 
 			resp.Result.Videos = append(resp.Result.Videos, struct {
-				Video     []byte "json:\"video\""
-				Extension string "json:\"extension\""
+				Thumbnail []byte   "json:\"thumbnail\""
+				Tags      []string "json:\"tags\""
 			}{
-				recv.GetVideo(),
-				recv.GetExtension(),
+				recv.GetThumbnail(),
+				recv.GetTags(),
 			})
 		}
 		if err = grpcStreamVideosResp.CloseSend(); err != nil {
@@ -284,6 +285,7 @@ func (a *detailedalbum) PutHandler() http.Handler {
 					AccessToken: at[0],
 					LoginToken:  lt[0],
 					Video:       v.File,
+					Thumbnail:   internal.CreateThumbnailFromVideo(v.File),
 					Extension:   v.Extension,
 					Size:        float64(v.Size),
 					Album:       req.Data.Name,

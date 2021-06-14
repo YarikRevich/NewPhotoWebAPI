@@ -15,7 +15,6 @@ import (
 
 	"NewPhotoWeb/logic/proto"
 	photomodel "NewPhotoWeb/logic/services/models/photo"
-	"NewPhotoWeb/utils"
 
 	"NewPhotoWeb/log"
 	"NewPhotoWeb/logic/client"
@@ -78,7 +77,7 @@ func (a *photo) GetHandler() http.Handler {
 				Tags      []string "json:\"tags\""
 			}{
 				grpcStreamResp.GetThumbnail(),
-				utils.GetCleanTags(grpcStreamResp.GetTags()),
+				grpcStreamResp.GetTags(),
 			})
 		}
 

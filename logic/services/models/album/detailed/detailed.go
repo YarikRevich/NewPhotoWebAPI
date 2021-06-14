@@ -7,11 +7,11 @@ type GETResponseEqualAlbumModel struct {
 		Name   string `json:"name"`
 		Photos []struct {
 			Thumbnail []byte `json:"thumbnail"`
-			Extension string `json:"extension"`
+			Tags []string `json:"tags"`
 		} `json:"photos"`
 		Videos []struct {
-			Video     []byte `json:"video"`
-			Extension string `json:"extension"`
+			Thumbnail []byte `json:"thumbnail"`
+			Tags []string `json:"tags"`
 		} `json:"videos"`
 	} `json:"result"`
 	service.ServiceModel
